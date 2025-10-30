@@ -3,197 +3,186 @@
 {% block title %}{{ game.titre }} - GameForge{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
+<!-- Header ultra-compact -->
+<div class="row mb-2">
     <div class="col-12">
-        <a href="{% url 'games:home' %}" class="btn btn-light mb-3">← Retour</a>
+        <a href="{% url 'games:home' %}" class="btn btn-light btn-sm mb-2">Retour</a>
         
         <div class="card">
-            <div class="card-body p-5">
-                <div class="d-flex justify-content-between align-items-start mb-4">
-                    <div>
-                        <h1 class="card-title">{{ game.titre }}</h1>
-                        <p class="text-muted">
+            <div class="card-body" style="padding: 12px 15px;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div style="flex: 1;">
+                        <h1 style="font-size: 1.6rem; margin-bottom: 5px;">{{ game.titre }}</h1>
+                        <p style="margin-bottom: 5px; font-size: 0.85rem;">
                             Par {{ game.createur.username }} • {{ game.date_creation|date:"d/m/Y" }}
                             {% if not game.est_public %}
-                                <span class="badge bg-secondary ms-2">Privé</span>
+                                <span class="badge bg-secondary" style="font-size: 0.7rem;">Privé</span>
                             {% endif %}
                         </p>
+                        <div style="margin-bottom: 5px;">
+                            <span class="badge-genre me-2">{{ game.get_genre_display }}</span>
+                            <span class="badge-ambiance">{{ game.get_ambiance_display }}</span>
+                        </div>
+                        {% if game.mots_cles %}
+                        <div style="font-size: 0.85rem; margin-top: 5px;">
+                            <strong>Mots-clés:</strong> {{ game.mots_cles }}
+                        </div>
+                        {% endif %}
+                        {% if game.references %}
+                        <div style="font-size: 0.85rem; margin-top: 3px;">
+                            <strong>Références:</strong> {{ game.references }}
+                        </div>
+                        {% endif %}
                     </div>
                     <div>
                         {% if user.is_authenticated %}
-                            <a href="{% url 'games:toggle_favorite' game.id %}" class="btn btn-outline-danger">
-                                {% if is_favorited %}❤️{% else %}🤍{% endif %} {{ game.likes_count }}
+                            <a href="{% url 'games:toggle_favorite' game.id %}" class="btn btn-outline-danger btn-sm">
+                                {% if is_favorited %}★{% else %}☆{% endif %} {{ game.likes_count }}
                             </a>
                         {% else %}
-                            <span class="text-muted">❤️ {{ game.likes_count }}</span>
+                            <span style="font-size: 0.9rem;">{{ game.likes_count }} likes</span>
                         {% endif %}
                     </div>
                 </div>
-
-                <div class="mb-4">
-                    <span class="badge-genre me-2">{{ game.get_genre_display }}</span>
-                    <span class="badge-ambiance">{{ game.get_ambiance_display }}</span>
-                </div>
-
-                {% if game.mots_cles %}
-                <div class="mb-4">
-                    <strong>Mots-clés :</strong> {{ game.mots_cles }}
-                </div>
-                {% endif %}
-
-                {% if game.references %}
-                <div class="mb-4">
-                    <strong>Références :</strong> {{ game.references }}
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- 🎨 IMAGE GÉNÉRÉE - SECTION AJOUTÉE -->
-{% if game.concept_arts.first %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body p-4">
-                <h3 class="card-title">🎨 Cover Art</h3>
+<!-- Layout 2 colonnes ultra-compact -->
+<div class="row">
+    <!-- Colonne gauche -->
+    <div class="col-lg-6">
+        <!-- Cover Art -->
+        {% if game.concept_arts.first %}
+        <div class="card" style="margin-bottom: 10px;">
+            <div class="card-body" style="padding: 12px;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Cover Art</h3>
                 {% if game.concept_arts.first.image %}
-                    <div class="text-center mt-3">
+                    <div class="text-center">
                         <img src="{{ game.concept_arts.first.image.url }}" 
-                             alt="Cover art - {{ game.titre }}" 
-                             class="img-fluid rounded shadow-lg"
-                             style="max-width: 100%; max-height: 600px; object-fit: contain;">
+                             alt="Cover - {{ game.titre }}" 
+                             class="img-fluid"
+                             style="max-height: 350px; object-fit: contain;">
                     </div>
-                    <p class="text-muted mt-3 small">
-                        <em>{{ game.concept_arts.first.description|truncatewords:30 }}</em>
+                    {% if game.concept_arts.first.description %}
+                    <p style="margin-top: 8px; margin-bottom: 0; font-size: 0.85rem; opacity: 0.9;">
+                        {{ game.concept_arts.first.description|truncatewords:25 }}
                     </p>
+                    {% endif %}
                 {% else %}
-                    <div class="alert alert-warning">
-                        ⚠️ Image non disponible. Description : {{ game.concept_arts.first.description|truncatewords:20 }}
+                    <div class="alert alert-warning" style="margin-bottom: 0; padding: 8px;">
+                        Image non disponible
                     </div>
                 {% endif %}
             </div>
         </div>
-    </div>
-</div>
-{% endif %}
+        {% endif %}
 
-<!-- Univers -->
-{% if game.universe %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body p-4">
-                <h3 class="card-title">🌌 Univers</h3>
-                <div class="mb-3">
+        <!-- Univers -->
+        {% if game.universe %}
+        <div class="card" style="margin-bottom: 10px;">
+            <div class="card-body" style="padding: 12px;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 6px;">Univers</h3>
+                <div style="margin-bottom: 6px;">
                     <span class="badge bg-info me-2">{{ game.universe.get_style_graphique_display }}</span>
                     <span class="badge bg-info">{{ game.universe.get_type_monde_display }}</span>
                 </div>
-                <p class="card-text" style="white-space: pre-line;">{{ game.universe.description }}</p>
+                <p style="margin-bottom: 0; white-space: pre-line; font-size: 0.9rem; line-height: 1.5;">{{ game.universe.description }}</p>
             </div>
         </div>
-    </div>
-</div>
-{% endif %}
+        {% endif %}
 
-<!-- Scénario -->
-{% if game.scenario %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body p-4">
-                <h3 class="card-title">📖 Scénario</h3>
+        <!-- Personnages - Format compact -->
+        {% if game.characters.all %}
+        <div class="card" style="margin-bottom: 10px;">
+            <div class="card-body" style="padding: 12px;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Personnages</h3>
+                {% for character in game.characters.all %}
+                <div class="card bg-light" style="margin-bottom: {% if not forloop.last %}8px{% else %}0{% endif %};">
+                    <div class="card-body" style="padding: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 4px;">
+                            <h5 style="font-size: 0.95rem; margin-bottom: 0; font-weight: 700;">{{ character.nom }}</h5>
+                            <div>
+                                <span class="badge bg-primary" style="font-size: 0.7rem;">{{ character.get_role_display }}</span>
+                                {% if character.classe %}
+                                <span class="badge bg-secondary" style="font-size: 0.7rem;">{{ character.get_classe_display }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <p style="font-size: 0.85rem; margin-bottom: {% if character.gameplay_description %}4px{% else %}0{% endif %}; line-height: 1.4;">{{ character.background }}</p>
+                        {% if character.gameplay_description %}
+                        <p style="font-size: 0.8rem; margin-bottom: 0; opacity: 0.85;">
+                            <strong>Gameplay:</strong> {{ character.gameplay_description }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Colonne droite -->
+    <div class="col-lg-6">
+        <!-- Scénario - Format ultra-compact -->
+        {% if game.scenario %}
+        <div class="card" style="margin-bottom: 10px;">
+            <div class="card-body" style="padding: 12px;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 10px;">Scénario</h3>
                 
-                <h5 class="mt-4">Acte I - Introduction</h5>
-                <p style="white-space: pre-line;">{{ game.scenario.acte_1 }}</p>
+                <div style="margin-bottom: 10px;">
+                    <h5 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; color: var(--primary-cyan) !important;">Acte I - Introduction</h5>
+                    <p style="white-space: pre-line; font-size: 0.9rem; line-height: 1.5; margin-bottom: 0;">{{ game.scenario.acte_1 }}</p>
+                </div>
                 
-                <h5 class="mt-4">Acte II - Développement</h5>
-                <p style="white-space: pre-line;">{{ game.scenario.acte_2 }}</p>
+                <div style="margin-bottom: 10px;">
+                    <h5 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; color: var(--primary-cyan) !important;">Acte II - Développement</h5>
+                    <p style="white-space: pre-line; font-size: 0.9rem; line-height: 1.5; margin-bottom: 0;">{{ game.scenario.acte_2 }}</p>
+                </div>
                 
-                <h5 class="mt-4">Acte III - Climax</h5>
-                <p style="white-space: pre-line;">{{ game.scenario.acte_3 }}</p>
+                <div style="margin-bottom: {% if game.scenario.twist %}10px{% else %}0{% endif %};">
+                    <h5 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; color: var(--primary-cyan) !important;">Acte III - Climax</h5>
+                    <p style="white-space: pre-line; font-size: 0.9rem; line-height: 1.5; margin-bottom: 0;">{{ game.scenario.acte_3 }}</p>
+                </div>
                 
                 {% if game.scenario.twist %}
-                <div class="alert alert-warning mt-4">
-                    <strong>🎭 Plot Twist :</strong> {{ game.scenario.twist }}
+                <div class="alert alert-warning" style="margin-bottom: 0; padding: 10px;">
+                    <strong>Plot Twist:</strong> {{ game.scenario.twist }}
                 </div>
                 {% endif %}
             </div>
         </div>
-    </div>
-</div>
-{% endif %}
+        {% endif %}
 
-<!-- Personnages -->
-{% if game.characters.all %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body p-4">
-                <h3 class="card-title">👥 Personnages</h3>
-                <div class="row mt-4">
-                    {% for character in game.characters.all %}
-                    <div class="col-md-6 mb-3">
-                        <div class="card h-100 bg-light">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ character.nom }}</h5>
-                                <p class="mb-2">
-                                    <span class="badge bg-primary">{{ character.get_role_display }}</span>
-                                    {% if character.classe %}
-                                    <span class="badge bg-secondary">{{ character.get_classe_display }}</span>
-                                    {% endif %}
-                                </p>
-                                <p class="card-text">{{ character.background }}</p>
-                                {% if character.gameplay_description %}
-                                <p class="card-text text-muted small">
-                                    <strong>Gameplay :</strong> {{ character.gameplay_description }}
-                                </p>
-                                {% endif %}
-                            </div>
-                        </div>
+        <!-- Lieux - Format compact -->
+        {% if game.locations.all %}
+        <div class="card" style="margin-bottom: 10px;">
+            <div class="card-body" style="padding: 12px;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Lieux emblématiques</h3>
+                {% for location in game.locations.all %}
+                <div class="card bg-light" style="margin-bottom: {% if not forloop.last %}8px{% else %}0{% endif %};">
+                    <div class="card-body" style="padding: 10px;">
+                        <h5 style="font-size: 0.95rem; margin-bottom: 4px; font-weight: 700;">{{ location.nom }}</h5>
+                        <p style="font-size: 0.85rem; margin-bottom: 0; line-height: 1.4;">{{ location.description }}</p>
                     </div>
-                    {% endfor %}
                 </div>
+                {% endfor %}
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
-{% endif %}
 
-<!-- Lieux -->
-{% if game.locations.all %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body p-4">
-                <h3 class="card-title">🗺️ Lieux emblématiques</h3>
-                <div class="row mt-4">
-                    {% for location in game.locations.all %}
-                    <div class="col-md-6 mb-3">
-                        <div class="card h-100 bg-light">
-                            <div class="card-body">
-                                <h5 class="card-title">📍 {{ location.nom }}</h5>
-                                <p class="card-text">{{ location.description }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<!-- Actions pour le créateur -->
+<!-- Actions créateur - ultra compact -->
 {% if user == game.createur %}
-<div class="row mb-4">
+<div class="row" style="margin-top: 10px;">
     <div class="col-12">
         <div class="card bg-light">
-            <div class="card-body text-center">
-                <h5>Actions du créateur</h5>
-                <a href="{% url 'games:delete_game' game.id %}" class="btn btn-danger">🗑️ Supprimer ce jeu</a>
+            <div class="card-body text-center" style="padding: 10px;">
+                <h5 style="font-size: 0.95rem; margin-bottom: 6px;">Actions du créateur</h5>
+                <a href="{% url 'games:delete_game' game.id %}" class="btn btn-danger btn-sm">Supprimer ce jeu</a>
             </div>
         </div>
     </div>
