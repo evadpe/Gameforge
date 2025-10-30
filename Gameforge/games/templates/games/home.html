@@ -3,19 +3,17 @@
 {% block title %}Accueil - GameForge{% endblock %}
 
 {% block content %}
-<!-- Hero Section - Ultra Compact -->
 <div class="hero-section">
     <h1 class="display-3">GameForge</h1>
     <p class="lead">Créez des concepts de jeux vidéo uniques grâce à l'intelligence artificielle</p>
     {% if user.is_authenticated %}
         <a href="{% url 'games:create_game' %}" class="btn btn-primary me-2">Créer un jeu</a>
-        <a href="{% url 'games:create_random_game' %}" class="btn btn-light">Génération aléatoire</a>
+        <a href="{% url 'games:create_random_game' %}" class="btn btn-light" id="randomGameBtnHome">Génération aléatoire</a>
     {% else %}
         <a href="{% url 'games:register' %}" class="btn btn-primary">Commencer gratuitement</a>
     {% endif %}
 </div>
 
-<!-- Barre de recherche + Titre sur même ligne -->
 <div class="row mb-2 align-items-center">
     <div class="col-md-4">
         <h2 style="font-size: 1.4rem; margin-bottom: 0;">
@@ -32,7 +30,6 @@
     </div>
 </div>
 
-<!-- Liste des jeux -->
 {% if games %}
     <div class="row">
         {% for game in games %}
@@ -80,4 +77,55 @@
         </div>
     </div>
 {% endif %}
+
+<script>
+// LOGIQUE DE CHARGEMENT POUR LE BOUTON ALÉATOIRE SUR HOME.HTML
+document.addEventListener('DOMContentLoaded', () => {
+    const randomBtn = document.getElementById('randomGameBtnHome');
+    if (randomBtn) {
+        randomBtn.addEventListener('click', function(e) {
+            e.preventDefault(); 
+            
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const progressBar = document.getElementById('progressBar');
+            const statusText = document.getElementById('status-text');
+
+            if (!loadingOverlay) {
+                window.location.href = this.href; 
+                return;
+            }
+            
+            loadingOverlay.style.display = 'flex';
+            
+            progressBar.style.width = '10%';
+            progressBar.textContent = '10%';
+            statusText.textContent = "🤖 Démarrage de la génération aléatoire...";
+            
+            let progress = 10;
+            const interval = setInterval(() => {
+                if (progress < 95) {
+                    progress += 5;
+                    progressBar.style.width = progress + '%';
+                    progressBar.textContent = progress + '%';
+                    
+                    if (progress === 30) {
+                        statusText.textContent = "🎲 Choix des paramètres aléatoires...";
+                    } else if (progress === 60) {
+                        statusText.textContent = "🧠 Interrogation de l'IA...";
+                    } else if (progress === 80) {
+                        statusText.textContent = "💾 Sauvegarde en cours...";
+                    }
+                } else {
+                    clearInterval(interval);
+                    statusText.textContent = "Opération terminée. Redirection en cours...";
+                }
+            }, 1500);
+            
+            setTimeout(() => {
+                window.location.href = this.href;
+            }, 500); 
+        });
+    }
+});
+</script>
 {% endblock %}
