@@ -4,20 +4,20 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8">
+    <div class="col-md-8 col-lg-6">
         <div class="card">
-            <div class="card-body p-5">
-                <h2 class="card-title text-center mb-4">🎮 Créer un nouveau jeu</h2>
+            <div class="card-body">
+                <h2 class="card-title text-center mb-3">Créer un nouveau jeu</h2>
                 
-                <div class="alert alert-info mb-4">
-                    <strong>Générations restantes aujourd'hui :</strong> {{ remaining_generations }}
+                <div class="alert alert-info mb-3">
+                    <strong>Générations restantes aujourd'hui:</strong> {{ remaining_generations }}
                 </div>
 
                 <form method="post" id="gameForm">
                     {% csrf_token %}
                     
                     <div class="mb-3">
-                        <label for="{{ form.genre.id_for_label }}" class="form-label">Genre du jeu *</label>
+                        <label for="{{ form.genre.id_for_label }}" class="form-label">Genre du jeu</label>
                         {{ form.genre }}
                         {% if form.genre.errors %}
                             <div class="text-danger mt-1">{{ form.genre.errors }}</div>
@@ -25,7 +25,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.ambiance.id_for_label }}" class="form-label">Ambiance *</label>
+                        <label for="{{ form.ambiance.id_for_label }}" class="form-label">Ambiance</label>
                         {{ form.ambiance }}
                         {% if form.ambiance.errors %}
                             <div class="text-danger mt-1">{{ form.ambiance.errors }}</div>
@@ -33,7 +33,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.mots_cles.id_for_label }}" class="form-label">Mots-clés *</label>
+                        <label for="{{ form.mots_cles.id_for_label }}" class="form-label">Mots-clés</label>
                         {{ form.mots_cles }}
                         <small class="form-text text-muted">{{ form.mots_cles.help_text }}</small>
                         {% if form.mots_cles.errors %}
@@ -50,7 +50,7 @@
                         {% endif %}
                     </div>
 
-                    <div class="mb-4 form-check">
+                    <div class="mb-3 form-check">
                         {{ form.est_public }}
                         <label class="form-check-label" for="{{ form.est_public.id_for_label }}">
                             {{ form.est_public.label }}
@@ -58,7 +58,7 @@
                     </div>
 
                     <button type="submit" class="btn btn-primary w-100" id="submitBtn">
-                        <span id="btnText">🚀 Générer le jeu</span>
+                        <span id="btnText">Générer le jeu</span>
                         <span id="btnSpinner" class="d-none">
                             <span class="spinner-border spinner-border-sm me-2" role="status"></span>
                             Génération en cours...
@@ -66,10 +66,10 @@
                     </button>
                 </form>
 
-                <div class="text-center mt-4">
-                    <p class="text-muted">ou</p>
+                <div class="text-center mt-3">
+                    <p class="text-muted mb-2">ou</p>
                     <a href="{% url 'games:create_random_game' %}" class="btn btn-light">
-                        🎲 Génération aléatoire
+                        Génération aléatoire
                     </a>
                 </div>
             </div>
@@ -78,20 +78,8 @@
 </div>
 
 <script>
-// document.getElementById('gameForm').addEventListener('submit', function() {
-//     document.getElementById('btnText').classList.add('d-none');
-//     document.getElementById('btnSpinner').classList.remove('d-none');
-//     document.getElementById('submitBtn').disabled = true;
-// });
 document.getElementById('gameForm').addEventListener('submit', function(e) {
-    console.log('Formulaire soumis !');
-    console.log('Action:', this.action);
-    console.log('Method:', this.method);
-    
-    // Commentez ces lignes pour tester si c'est elles qui bloquent
-    // document.getElementById('btnText').classList.add('d-none');
-    // document.getElementById('btnSpinner').classList.remove('d-none');
-    // document.getElementById('submitBtn').disabled = true;
+    console.log('Formulaire soumis');
 });
 </script>
 
