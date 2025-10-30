@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import date, datetime
+from django.dispatch import receiver
+from django.db.models.signals import post_save 
 
 class Game(models.Model):
     """Modèle principal pour un jeu généré"""
@@ -159,6 +161,46 @@ class Favorite(models.Model):
     def __str__(self):
         return f"{self.user.username} ♥ {self.game.titre}"
 
+class Profile(models.Model):
+    """Profil étendu de l'utilisateur"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    date_of_birth = models.DateField(null=True, blank=True, verbose_name="Date de naissance")
+    default_visibility = models.CharField(
+        max_length=10, 
+        choices=[
+            ('public', 'Public'), 
+            ('private', 'Privé')
+        ],
+        default='public',
+        verbose_name="Visibilité par défaut"
+    )
+    email_notifications = models.BooleanField(
+        default=True,
+        verbose_name="Notifications par email"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Profil"
+        verbose_name_plural = "Profils"
+    
+    def __str__(self):
+        return f"Profil de {self.user.username}"
+
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    """Crée automatiquement un profil quand un utilisateur est créé"""
+    if created:
+        Profile.objects.create(user=instance)
+
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    """Sauvegarde le profil quand l'utilisateur est sauvegardé"""
+    if hasattr(instance, 'profile'):
+        instance.profile.save()
 
 class GenerationLimit(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
