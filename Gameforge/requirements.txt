@@ -1,0 +1,21 @@
+# ========================================
+# Gameforge - Dépendances Python
+# ========================================
+ 
+# Framework Web
+Django==5.2.7
+ 
+# Intelligence Artificielle - Génération de texte
+mistralai>=1.0.0         
+ 
+# Intelligence Artificielle - Génération d'images
+requests>=2.31.0          
+ 
+# Variables d'environnement
+python-dotenv==1.0.0      
+ 
+# Traitement d'images
+Pillow>=10.0.0            
+ 
+ 
+ 
