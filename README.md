@@ -637,11 +637,8 @@ if response.status_code == 200:
    - Les Personnages
    - Lieux emblématiques
    - Concept Arts / Cover
-** Code ** :
-Se référer au Word
-
-  
-  ```
+-** Code ** :
+- Se référer au Word
 
 ---
 
