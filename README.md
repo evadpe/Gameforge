@@ -636,9 +636,8 @@ if response.status_code == 200:
    - Son scénario complet
    - Les Personnages
    - Lieux emblématiques
-   - Concept Arts / Cover
-     
--**Code**:
+   - Concept Arts / Cover  
+-**Code** :
 - Se référer au Word
 
 ---
