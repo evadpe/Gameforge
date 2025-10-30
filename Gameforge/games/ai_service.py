@@ -161,20 +161,37 @@ class AIService:
             return f"{prefix} {suffix}"
         
         elif "personnage" in prompt.lower() or "NOM:" in prompt:
-            # Mock de personnages avec format structuré
+            # Mock de personnages avec format structuré et variation
             names = ["Aelric", "Zara", "Theron", "Lyssa", "Kael", "Nyx", "Orin", "Selene"]
             roles = ["héros", "antagoniste", "allié", "mentor"]
             classes = ["guerrier", "mage", "archer", "voleur", "paladin", "druide"]
             
+            # Détecter l'ambiance dans le prompt
+            ambiance_detected = "default"
+            if "sombre" in prompt.lower():
+                ambiance_detected = "sombre"
+            elif "joyeux" in prompt.lower():
+                ambiance_detected = "joyeux"
+            elif "mysterieux" in prompt.lower():
+                ambiance_detected = "mysterieux"
+            
+            backgrounds = {
+                'sombre': "Hanté par un passé tragique, ce personnage cherche la rédemption dans les ombres. Son cœur porte les cicatrices de pertes indicibles.",
+                'joyeux': "Optimiste et plein d'énergie, ce personnage apporte joie et espoir partout où il passe. Son rire est contagieux.",
+                'mysterieux': "Les origines de ce personnage restent énigmatiques. Entouré de secrets, sa véritable nature reste inconnue.",
+                'default': "Un personnage expérimenté dont les compétences sont reconnues. Déterminé à accomplir sa destinée."
+            }
+            
             name = names[hash_val % len(names)]
             role = roles[(hash_val // 7) % len(roles)]
             classe = classes[(hash_val // 11) % len(classes)]
+            background = backgrounds.get(ambiance_detected, backgrounds['default'])
             
             return f"""NOM: {name}
 ROLE: {role}
 CLASSE: {classe}
 PERSONNALITE: Courageux, loyal, mystérieux
-BACKGROUND: Un {classe} qui cherche à accomplir sa destinée dans un monde en péril.
+BACKGROUND: {background}
 APPARENCE: Allure noble avec une aura de puissance
 COMPETENCES: Maîtrise du combat et des stratégies
 GAMEPLAY: Personnage équilibré avec des capacités variées
@@ -182,16 +199,33 @@ GAMEPLAY: Personnage équilibré avec des capacités variées
 ---"""
         
         elif "lieu" in prompt.lower() or "TYPE:" in prompt:
-            # Mock de lieux avec format structuré
+            # Mock de lieux avec format structuré et variation
             places = ["Tour", "Cité", "Forêt", "Temple", "Montagne", "Ruines", "Grotte", "Château"]
-            adjectives = ["Sombre", "Ancienne", "Mystérieuse", "Sacrée", "Oubliée", "Éternelle"]
+            adjectives = ["Sombre", "Ancienne", "Mystérieuse", "Sacrée", "Oubliée", "Éternelle", "Maudite", "Céleste"]
+            
+            # Détecter l'ambiance dans le prompt
+            ambiance_detected = "default"
+            if "sombre" in prompt.lower() or "dark" in prompt.lower():
+                ambiance_detected = "sombre"
+            elif "joyeux" in prompt.lower() or "happy" in prompt.lower():
+                ambiance_detected = "joyeux"
+            elif "mysterieux" in prompt.lower() or "mysterious" in prompt.lower():
+                ambiance_detected = "mysterieux"
+            
+            descriptions = {
+                'sombre': "Un lieu désolé où règne une atmosphère oppressante. Les ombres semblent vivantes et peu osent s'y aventurer.",
+                'joyeux': "Un lieu vibrant de vie et de couleurs éclatantes. L'atmosphère y est chaleureuse et accueillante.",
+                'mysterieux': "Un lieu énigmatique dont les secrets restent bien gardés. Des phénomènes étranges y défient toute explication.",
+                'default': "Un lieu légendaire rempli de mystères et de dangers anciens."
+            }
             
             place = places[hash_val % len(places)]
             adj = adjectives[(hash_val // 7) % len(adjectives)]
+            description = descriptions.get(ambiance_detected, descriptions['default'])
             
             return f"""NOM: {place} {adj}
 TYPE: donjon
-DESCRIPTION: Un lieu légendaire rempli de mystères et de dangers anciens.
+DESCRIPTION: {description}
 IMPORTANCE: Point clé de la quête principale
 DANGERS: Créatures hostiles et pièges mortels
 TRESORS: Artefacts puissants et connaissances perdues
@@ -317,13 +351,42 @@ Scénario:"""
             'twist': clean_paragraphs[3] if len(clean_paragraphs) > 3 else "Un secret est révélé."
         }
 
-    def generate_characters(self, game_title: str, genre: str, num_characters: int = 3) -> List[Dict[str, str]]:
+    def generate_characters(self, game_title: str, genre: str, num_characters: int = 3, ambiance: str = None, mots_cles: str = None, universe_description: str = None) -> List[Dict[str, str]]:
         """
-        Génère des personnages détaillés pour le jeu
+        Génère des personnages détaillés pour le jeu avec cohérence thématique
         """
-        prompt = f"""Crée {num_characters} personnages pour le jeu "{game_title}" (genre: {genre}).
+        # Construire un prompt enrichi avec tous les thèmes
+        context_parts = [f'Jeu: "{game_title}"', f'Genre: {genre}']
+        
+        if ambiance:
+            context_parts.append(f'Ambiance: {ambiance}')
+        if mots_cles:
+            context_parts.append(f'Thèmes clés: {mots_cles}')
+        if universe_description:
+            context_parts.append(f'Univers: {universe_description[:150]}')
+        
+        context = '\n'.join(context_parts)
+        
+        prompt = f"""Crée {num_characters} personnages cohérents avec le contexte suivant:
+
+{context}
+
+IMPORTANT: Les personnages doivent refléter l'ambiance et les thèmes du jeu. Par exemple:
+- Ambiance "sombre" → personnages torturés, moralement ambigus, avec des backstories tragiques
+- Ambiance "joyeux" → personnages optimistes, colorés, avec des motivations positives
+- Thèmes "magie, dragons" → classes et compétences liées à la magie et aux dragons
+- Genre "cyberpunk" → noms futuristes, compétences technologiques, background urbain dystopique
 
 Pour CHAQUE personnage, utilise EXACTEMENT ce format:
+
+NOM: [nom adapté au thème et genre]
+ROLE: [héros/antagoniste/allié/mentor]
+CLASSE: [classe cohérente avec le genre et les thèmes]
+PERSONNALITE: [traits reflétant l'ambiance]
+BACKGROUND: [histoire en 2-3 phrases liée à l'univers]
+APPARENCE: [description physique cohérente avec l'ambiance]
+COMPETENCES: [capacités liées aux thèmes clés]
+GAMEPLAY: [style de jeu adapté au genre]
 
 NOM: [nom du personnage]
 ROLE: [héros/antagoniste/allié/mentor]
@@ -396,12 +459,41 @@ Personnages:"""
             print("🎲 Génération de personnages uniques...")
             
             import hashlib
-            seed = f"{game_title}_{genre}_{len(characters)}"
+            seed = f"{game_title}_{genre}_{ambiance}_{len(characters)}"
             
             roles = ['héros', 'antagoniste', 'allié', 'mentor', 'rival']
             classes = ['guerrier', 'mage', 'archer', 'voleur', 'paladin', 'druide', 'assassin', 'clerc']
             traits = ['courageux', 'rusé', 'loyal', 'mystérieux', 'impulsif', 'sage', 'sarcastique', 'noble']
             name_parts = ['Ae', 'Kal', 'Thy', 'Zar', 'Lyn', 'Mor', 'Syl', 'Rae', 'Dor', 'Vel']
+            
+            # Templates variés pour les backgrounds selon l'ambiance
+            background_templates = {
+                'sombre': [
+                    "Hanté par un passé tragique, ce {classe} cherche la rédemption dans les ombres de {game_title}.",
+                    "Ayant perdu tout ce qui lui était cher, ce {classe} {trait1} poursuit une quête désespérée.",
+                    "Un {classe} tourmenté dont l'âme est aussi {trait1} que son destin est sombre."
+                ],
+                'joyeux': [
+                    "Ce {classe} optimiste apporte joie et espoir partout où il passe dans {game_title}.",
+                    "Un {classe} {trait1} qui croit fermement que chaque jour est une nouvelle aventure.",
+                    "Avec un sourire éclatant, ce {classe} inspire courage et bonheur à ses compagnons."
+                ],
+                'mysterieux': [
+                    "Les origines de ce {classe} restent énigmatiques, mais sa maîtrise est indéniable.",
+                    "Un {classe} {trait1} entouré de secrets et de légendes oubliées.",
+                    "Personne ne connaît vraiment ce {classe}, mais tous respectent ses capacités."
+                ],
+                'epique': [
+                    "Destiné à accomplir de grandes choses, ce {classe} {trait1} est une légende vivante.",
+                    "Un {classe} héroïque dont les exploits résonnent à travers tout {game_title}.",
+                    "Ce {classe} porte sur ses épaules le poids du destin et l'espoir de tous."
+                ],
+                'default': [
+                    "Un {classe} {trait1} dont les compétences sont reconnues dans tout {game_title}.",
+                    "Ce {classe} possède un talent naturel et une détermination sans faille.",
+                    "Un {classe} expérimenté dont le {trait2} en fait un allié précieux."
+                ]
+            }
             
             while len(characters) < num_characters:
                 char_seed = f"{seed}_{len(characters)}"
@@ -413,12 +505,18 @@ Personnages:"""
                 trait2 = traits[(hash_val // 1000) % len(traits)]
                 name = name_parts[hash_val % len(name_parts)] + name_parts[(hash_val // 7) % len(name_parts)]
                 
+                # Choisir template selon l'ambiance
+                amb_key = ambiance.lower() if ambiance and ambiance.lower() in background_templates else 'default'
+                templates = background_templates[amb_key]
+                template = templates[(hash_val // 50) % len(templates)]
+                background = template.format(classe=classe, trait1=trait1, trait2=trait2, game_title=game_title)
+                
                 char = {
                     'nom': name,
                     'role': role,
                     'classe': classe,
                     'personnalite': f"{trait1.capitalize()}, {trait2}",
-                    'background': f"Un {classe} {trait1} dont le destin est lié à {game_title}.",
+                    'background': background,
                     'apparence': f"{classe.capitalize()} à l'allure {trait1}",
                     'competences': f"Maîtrise du {classe} et {trait2}",
                     'gameplay_description': f"Personnage {role} jouable en {classe}"
@@ -428,14 +526,41 @@ Personnages:"""
         
         return characters[:num_characters]
 
-    def generate_locations(self, game_title: str, universe: str, num_locations: int = 4) -> List[Dict[str, str]]:
+    def generate_locations(self, game_title: str, universe: str, num_locations: int = 4, genre: str = None, ambiance: str = None, mots_cles: str = None) -> List[Dict[str, str]]:
         """
-        Génère des lieux emblématiques avec plus de détails
+        Génère des lieux emblématiques cohérents avec les thèmes
         """
-        prompt = f"""Crée {num_locations} lieux emblématiques pour le jeu "{game_title}".
-Univers: {universe[:150]}
+        # Construire un contexte enrichi
+        context_parts = [f'Jeu: "{game_title}"', f'Univers: {universe[:150]}']
+        
+        if genre:
+            context_parts.append(f'Genre: {genre}')
+        if ambiance:
+            context_parts.append(f'Ambiance: {ambiance}')
+        if mots_cles:
+            context_parts.append(f'Thèmes: {mots_cles}')
+        
+        context = '\n'.join(context_parts)
+        
+        prompt = f"""Crée {num_locations} lieux emblématiques cohérents avec:
+
+{context}
+
+IMPORTANT: Les lieux doivent refléter l'ambiance et les thèmes:
+- Ambiance "sombre" → lieux oppressants, ruines, cachots, zones désolées
+- Ambiance "joyeux" → villages colorés, marchés animés, jardins enchantés
+- Thèmes "magie" → tours de mages, bibliothèques mystiques, portails magiques
+- Thèmes "technologie" → laboratoires, usines, bases high-tech
+- Genre "horror" → lieux inquiétants avec atmosphère menaçante
 
 Pour chaque lieu, utilise EXACTEMENT ce format:
+
+NOM: [nom évocateur adapté aux thèmes]
+TYPE: [type cohérent avec le genre et l'ambiance]
+DESCRIPTION: [2-3 phrases reflétant l'ambiance]
+IMPORTANCE: [rôle dans l'histoire lié aux thèmes]
+DANGERS: [dangers cohérents avec le genre]
+TRESORS: [récompenses liées aux thèmes clés]
 
 NOM: [nom du lieu]
 TYPE: [ville/forêt/dongeon/temple/château/ruines/etc]
@@ -498,11 +623,56 @@ Lieux:"""
             print("🎲 Génération de lieux uniques...")
             
             import hashlib
-            seed = f"{game_title}_{universe}_{len(locations)}"
+            seed = f"{game_title}_{universe}_{genre}_{ambiance}_{len(locations)}"
             
             types = ['donjon', 'ville', 'forêt', 'montagne', 'temple', 'ruines', 'grotte', 'château']
             prefixes = ['Tour de', 'Cité de', 'Forêt des', 'Mont', 'Temple de', 'Ruines de', 'Grotte du', 'Château de']
             suffixes = ['Lumière', 'Ténèbres', 'Mystères', 'Sagesse', 'Perdition', 'Éternité', 'Silence', 'Tempête']
+            
+            # Templates variés pour les descriptions selon l'ambiance
+            description_templates = {
+                'sombre': [
+                    "Un {type_loc} désolé où règne une atmosphère oppressante. Les ombres semblent vivantes et les échos du passé hantent chaque recoin.",
+                    "Ce {type_loc} abandonné est imprégné de tristesse et de mystère. Peu osent s'aventurer dans ses profondeurs menaçantes.",
+                    "Les ruines de ce {type_loc} racontent une histoire tragique. L'obscurité y est presque palpable."
+                ],
+                'joyeux': [
+                    "Un {type_loc} vibrant de vie et de couleurs éclatantes. Les rires et la musique emplissent l'air de cette oasis de bonheur.",
+                    "Ce {type_loc} enchanteur accueille les voyageurs avec chaleur. Son ambiance festive apporte réconfort et espoir.",
+                    "Un {type_loc} lumineux où la joie est contagieuse. Chaque visiteur repart le cœur plus léger."
+                ],
+                'mysterieux': [
+                    "Un {type_loc} énigmatique dont les secrets restent bien gardés. Des phénomènes étranges y défient toute explication.",
+                    "Ce {type_loc} ancien cache des mystères insondables. Les légendes qui l'entourent sont aussi fascinantes qu'inquiétantes.",
+                    "Un {type_loc} où le temps semble suspendu. Les mystères qui s'y cachent attirent les curieux et les aventuriers."
+                ],
+                'epique': [
+                    "Un {type_loc} majestueux qui inspire respect et admiration. Son importance dans l'histoire est gravée dans chaque pierre.",
+                    "Ce {type_loc} légendaire a été le théâtre de batailles épiques. Sa grandeur témoigne des héros qui y ont combattu.",
+                    "Un {type_loc} imposant dont la magnificence coupe le souffle. C'est ici que le destin du monde se joue."
+                ],
+                'default': [
+                    "Un {type_loc} remarquable qui joue un rôle crucial dans l'aventure. Son architecture unique attire l'attention.",
+                    "Ce {type_loc} fascinant recèle bien des surprises pour les explorateurs audacieux.",
+                    "Un {type_loc} important dont l'influence se fait sentir dans toute la région."
+                ]
+            }
+            
+            danger_templates = [
+                "Créatures hostiles et pièges ancestraux",
+                "Gardiens corrompus et énigmes mortelles",
+                "Forces mystérieuses et embuscades dangereuses",
+                "Entités anciennes et défenses magiques",
+                "Pièges sophistiqués et ennemis redoutables"
+            ]
+            
+            treasure_templates = [
+                "Artéfacts légendaires et connaissances perdues",
+                "Trésors cachés et secrets anciens",
+                "Reliques puissantes et grimoires mystiques",
+                "Richesses inestimables et pouvoirs oubliés",
+                "Équipements rares et manuscrits précieux"
+            ]
             
             while len(locations) < num_locations:
                 loc_seed = f"{seed}_{len(locations)}"
@@ -512,13 +682,19 @@ Lieux:"""
                 prefix = prefixes[hash_val % len(prefixes)]
                 suffix = suffixes[(hash_val // 7) % len(suffixes)]
                 
+                # Choisir template selon l'ambiance
+                amb_key = ambiance.lower() if ambiance and ambiance.lower() in description_templates else 'default'
+                templates = description_templates[amb_key]
+                template = templates[(hash_val // 50) % len(templates)]
+                description = template.format(type_loc=type_loc)
+                
                 loc = {
                     'nom': f"{prefix} {suffix}",
                     'type': type_loc,
-                    'description': f"Un {type_loc} légendaire où {suffix.lower()} règne en maître.",
-                    'importance': f"Lieu crucial lié à l'histoire de {game_title}",
-                    'dangers': f"Gardiens anciens et énigmes de {suffix.lower()}",
-                    'tresors': f"Artéfacts de {suffix.lower()} et connaissances oubliées"
+                    'description': description,
+                    'importance': f"Lieu stratégique lié aux événements majeurs de {game_title}",
+                    'dangers': danger_templates[(hash_val // 100) % len(danger_templates)],
+                    'tresors': treasure_templates[(hash_val // 200) % len(treasure_templates)]
                 }
                 locations.append(loc)
                 print(f"🎲 Lieu généré : {loc['nom']}")
@@ -610,7 +786,7 @@ L'image doit être épique, immersive et capturer visuellement l'essence du jeu.
                 }
                 
         except Exception as e:
-            print(f" Erreur lors de la génération d'image: {e}")
+            print(f"❌ Erreur lors de la génération d'image: {e}")
             description = self.generate_game_image(game_title, genre, ambiance, universe_description)
             return {
                 'description': description,
