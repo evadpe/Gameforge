@@ -68,7 +68,7 @@
 
                 <div class="text-center mt-3">
                     <p class="text-muted mb-2">ou</p>
-                    <a href="{% url 'games:create_random_game' %}" class="btn btn-light">
+                    <a href="{% url 'games:create_random_game' %}" class="btn btn-light" id="randomGameLink">
                         Génération aléatoire
                     </a>
                 </div>
@@ -78,8 +78,101 @@
 </div>
 
 <script>
+// Logique de chargement pour la génération manuelle
 document.getElementById('gameForm').addEventListener('submit', function(e) {
-    console.log('Formulaire soumis');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const progressBar = document.getElementById('progressBar');
+    const statusText = document.getElementById('status-text');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Vérifie si l'overlay (défini dans base.html) est disponible
+    if (loadingOverlay) {
+        submitBtn.disabled = true;
+        loadingOverlay.style.display = 'flex';
+
+        // Étapes de progression pour la génération manuelle
+        const steps = [
+            { percent: 20, text: "Étape 1/5 : Génération du Titre et de l'Univers..." },
+            { percent: 40, text: "Étape 2/5 : Écriture du Scénario en 3 actes..." },
+            { percent: 60, text: "Étape 3/5 : Conception des Personnages (3) et Lieux (4)..." },
+            { percent: 80, text: "Étape 4/5 : Génération de l'Image Conceptuelle (la plus longue)..." },
+            { percent: 95, text: "Étape 5/5 : Finalisation de la Sauvegarde des données..." }
+        ];
+
+        let currentStep = 0;
+
+        function updateProgress(step) {
+            if (step < steps.length) {
+                const { percent, text } = steps[step];
+                
+                progressBar.style.width = percent + '%';
+                progressBar.setAttribute('aria-valuenow', percent);
+                progressBar.textContent = percent + '%';
+                statusText.textContent = text;
+                currentStep++;
+
+                // Simuler le temps de chargement
+                setTimeout(() => updateProgress(currentStep), 7000); 
+            } else {
+                progressBar.style.width = '100%';
+                progressBar.setAttribute('aria-valuenow', 100);
+                progressBar.textContent = '100%';
+                statusText.textContent = 'Opération terminée. Redirection en cours...';
+            }
+        }
+        
+        updateProgress(currentStep);
+    }
+    // Le formulaire procède à la soumission POST
+});
+
+
+// LOGIQUE DE CHARGEMENT POUR LE BOUTON ALÉATOIRE (ID: randomGameLink)
+document.getElementById('randomGameLink').addEventListener('click', function(e) {
+    // 1. Empêcher la navigation immédiate
+    e.preventDefault(); 
+    
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const progressBar = document.getElementById('progressBar');
+    const statusText = document.getElementById('status-text');
+
+    if (!loadingOverlay) {
+        window.location.href = this.href; 
+        return;
+    }
+    
+    // 2. Afficher l'overlay et initialiser la progression
+    loadingOverlay.style.display = 'flex';
+    
+    progressBar.style.width = '10%';
+    progressBar.textContent = '10%';
+    statusText.textContent = "🤖 Démarrage de la génération aléatoire...";
+    
+    // 3. Simuler une progression
+    let progress = 10;
+    const interval = setInterval(() => {
+        if (progress < 95) {
+            progress += 5;
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = progress + '%';
+            
+            if (progress === 30) {
+                statusText.textContent = "🎲 Choix des paramètres aléatoires...";
+            } else if (progress === 60) {
+                statusText.textContent = "🧠 Interrogation de l'IA...";
+            } else if (progress === 80) {
+                statusText.textContent = "💾 Sauvegarde en cours...";
+            }
+        } else {
+            clearInterval(interval);
+            statusText.textContent = "Opération terminée. Redirection en cours...";
+        }
+    }, 1500); 
+    
+    // 4. Lancer la navigation réelle après un court délai pour que l'animation démarre
+    setTimeout(() => {
+        window.location.href = this.href;
+    }, 500); 
 });
 </script>
 
