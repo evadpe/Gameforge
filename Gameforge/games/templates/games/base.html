@@ -5,15 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}GameForge - Générateur de Jeux par IA{% endblock %}</title>
     
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- Custom Gaming Style -->
     <style>
         :root {
             --bg-dark: #0a0e27;
@@ -459,10 +456,77 @@
         /* White space optimization */
         .card + .card { margin-top: 12px; }
         .container { padding-top: 0; padding-bottom: 0; }
+
+        /* NOUVEAUX STYLES POUR LA POP-UP DE CHARGEMENT */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none; /* Caché par défaut */
+            justify-content: center;
+            align-items: center;
+            z-index: 1050; /* Au-dessus des modales Bootstrap */
+            color: white;
+            flex-direction: column;
+            text-align: center;
+        }
+        #loading-modal {
+            width: 80%;
+            max-width: 500px;
+            padding: 30px;
+            background: var(--card-bg); /* Utilisation du style existant */
+            border-radius: 15px;
+            border: 1px solid var(--primary-cyan);
+            box-shadow: 0 0 50px rgba(0, 240, 255, 0.5);
+            color: var(--text-normal);
+        }
+        #loading-modal h2 {
+             background: linear-gradient(135deg, var(--primary-cyan), var(--primary-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+        }
+        .progress {
+            height: 30px;
+            border-radius: 15px;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--primary-cyan);
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, var(--primary-cyan) 0%, var(--primary-purple) 100%);
+            color: var(--text-light) !important;
+            font-weight: 600;
+        }
+        #status-text {
+            margin-top: 10px;
+            font-size: 1rem;
+            color: var(--primary-cyan) !important;
+        }
+        #loading-modal small {
+            color: var(--text-muted) !important;
+            font-size: 0.75rem;
+        }
+
     </style>
 </head>
 <body>
-    <!-- Navigation -->
+    <div id="loading-overlay">
+        <div id="loading-modal">
+            <h2>🤖 Génération en cours...</h2>
+            
+            <div class="progress mb-3">
+                <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+            </div>
+            
+            <p id="status-text">Initialisation du service IA...</p>
+            <small>Cela peut prendre 30 à 40 secondes, notamment pour la génération d'images. Merci de patienter.</small>
+        </div>
+    </div>
+    
     <nav class="navbar navbar-expand-lg navbar-light">
         <div class="container">
             <a class="navbar-brand fw-bold" href="{% url 'games:home' %}">
@@ -508,7 +572,6 @@
         </div>
     </nav>
 
-    <!-- Messages -->
     {% if messages %}
         <div class="container mt-2">
             {% for message in messages %}
@@ -520,7 +583,6 @@
         </div>
     {% endif %}
 
-    <!-- Contenu -->
     <div class="content-wrapper">
         <div class="container">
             {% block content %}{% endblock %}
