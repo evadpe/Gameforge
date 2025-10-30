@@ -1,0 +1,34 @@
+# ========================================
+# Gameforge - Dépendances Python
+# ========================================
+
+# Framework Web
+Django==5.2.7
+
+# Intelligence Artificielle
+mistralai>=1.0.0          # SDK officiel Mistral AI pour génération de texte et images
+
+# Variables d'environnement
+python-dotenv==1.0.0      # Gestion du fichier .env
+
+# Traitement d'images
+Pillow>=10.0.0            # Nécessaire pour ImageField de Django
+
+# Base de données (optionnel - SQLite inclus par défaut)
+# psycopg2-binary>=2.9.0  # Pour PostgreSQL
+# mysqlclient>=2.2.0      # Pour MySQL
+
+# Serveur ASGI (optionnel pour production)
+# gunicorn>=21.0.0        # Serveur WSGI pour production
+# uvicorn>=0.24.0         # Serveur ASGI pour websockets
+
+# Sécurité et utilitaires (recommandé pour production)
+# django-environ>=0.11.0  # Gestion avancée des variables d'environnement
+# whitenoise>=6.6.0       # Servir les fichiers statiques en production
+# django-cors-headers     # Support CORS pour API
+
+# Développement (optionnel)
+# django-debug-toolbar    # Barre de debug pour développement
+# black                   # Formatage automatique du code
+# flake8                  # Linting Python
+# pytest-django           # Tests unitaires
