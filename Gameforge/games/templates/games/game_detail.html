@@ -183,9 +183,11 @@
             <div class="card-body text-center" style="padding: 10px;">
                 <h5 style="font-size: 0.95rem; margin-bottom: 6px;">Actions du créateur</h5>
                 <a href="{% url 'games:delete_game' game.id %}" class="btn btn-danger btn-sm">Supprimer ce jeu</a>
+                <a href="{% url 'games:export_game_pdf' game.id %}" class="btn btn-secondary btn-sm ms-2">Exporter en PDF</a>
             </div>
         </div>
     </div>
 </div>
 {% endif %}
 {% endblock %}
+
