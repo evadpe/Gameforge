@@ -498,8 +498,8 @@ L'application sera accessible sur **`http://127.0.0.1:8000/`**
 
 | Service | Modèle | Usage | Performance |
 |---------|--------|-------|-------------|
-| **Mistral AI** | `mistral-small-latest` | Génération de texte (titre, univers, scénario, personnages, lieux) | ✅ Rapide (~2-5s/appel), cohérent, français natif |
-| **Hugging Face** | `black-forest-labs/FLUX.1-schnell` | Génération d'images (concept arts) | ✅ Rapide (~5-10s), qualité correcte via API Inference |
+| **Mistral AI** | `mistral-small-latest` | Génération de texte (titre, univers, scénario, personnages, lieux) | Rapide (~2-5s/appel), cohérent, français natif |
+| **Hugging Face** | `black-forest-labs/FLUX.1-schnell` | Génération d'images (concept arts) | Rapide (~5-10s), qualité correcte via API Inference |
 
 **Choix du modèle d'image :**
 - **FLUX.1-schnell** (Black Forest Labs) choisi car :
