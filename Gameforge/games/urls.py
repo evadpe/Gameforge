@@ -19,5 +19,20 @@ urlpatterns = [
     # Favoris
     path('game/<int:game_id>/favorite/', views.toggle_favorite, name='toggle_favorite'),
     path('favorites/', views.favorites, name='favorites'),
+    
+    # Page principale des paramètres
+    path('settings/', views.settings, name='settings'),
+    
+    # Mise à jour du profil (email, date de naissance)
+    path('settings/profile/', views.update_profile, name='update_profile'),
+    
+    # Changement de mot de passe
+    path('settings/password/', views.change_password, name='change_password'),
+    
+    # Mise à jour des préférences (visibilité, notifications)
+    path('settings/preferences/', views.update_preferences, name='update_preferences'),
+    
+    # Suppression du compte
+    path('settings/delete/', views.delete_account, name='delete_account'),
 ]
 
