@@ -7,7 +7,8 @@ from django.db.models import Q
 from .models import Game, Universe, Scenario, Character, Location, ConceptArt, Favorite, GenerationLimit
 from .forms import GameCreationForm
 from .ai_service import AIService
-
+from django.contrib.auth import update_session_auth_hash
+from .models import Profile
 
 def home(request):
     """Page d'accueil avec tous les jeux publics"""
@@ -98,7 +99,7 @@ def create_game(request):
     limit, created = GenerationLimit.objects.get_or_create(user=request.user)
     
     if not limit.can_generate():
-        messages.error(request, f'Vous avez atteint la limite de {limit.daily_count} générations par jour. Réessayez demain!')  # ✅ Changé max_daily en daily_count
+        messages.error(request, f'Vous avez atteint la limite de {limit.daily_count} générations par jour. Réessayez demain!')  #  Changé max_daily en daily_count
         return redirect('games:dashboard')
     
     if request.method == 'POST':
@@ -129,7 +130,7 @@ def create_game(request):
                     createur=request.user,
                     est_public=est_public
                 )
-                
+
                 # Générer l'univers
                 universe_data = ai_service.generate_universe(titre, genre, ambiance, mots_cles)
                 Universe.objects.create(
@@ -138,6 +139,7 @@ def create_game(request):
                     style_graphique=universe_data['style_graphique'],
                     type_monde=universe_data['type_monde']
                 )
+            
                 
                 # Générer le scénario
                 scenario_data = ai_service.generate_scenario(titre, universe_data['description'], genre)
@@ -150,7 +152,7 @@ def create_game(request):
                 )
                 
                 # Générer les personnages
-                characters_data = ai_service.generate_characters(titre, genre, 3)
+                characters_data = ai_service.generate_characters(titre, genre, 3, ambiance, mots_cles, universe_data['description'])
                 for char_data in characters_data:
                     Character.objects.create(
                         game=game,
@@ -162,7 +164,7 @@ def create_game(request):
                     )
                 
                 # Générer les lieux
-                locations_data = ai_service.generate_locations(titre, universe_data['description'], 4)
+                locations_data = ai_service.generate_locations(titre, universe_data['description'], 4, genre, ambiance, mots_cles)
                 for loc_data in locations_data:
                     Location.objects.create(
                         game=game,
@@ -203,6 +205,114 @@ def create_game(request):
     }
     return render(request, 'games/create_game.html', context)
 
+# views.py - Vues pour les paramètres du profil
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.models import User
+
+@login_required
+def settings(request):
+    """Affiche la page des paramètres"""
+    return render(request, 'games/settings.html')
+
+
+@login_required
+def update_profile(request):
+    """Met à jour les informations du profil (email, date de naissance)"""
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        date_of_birth = request.POST.get('date_of_birth')
+        
+        # Mettre à jour l'email
+        if email:
+            request.user.email = email
+            request.user.save()
+        
+        # Mettre à jour la date de naissance (si vous avez un modèle Profile)
+        if date_of_birth:
+            # Assurez-vous d'avoir un modèle Profile lié à User
+            # Si vous n'avez pas de modèle Profile, créez-le d'abord
+            profile, created = Profile.objects.get_or_create(user=request.user)
+            profile.date_of_birth = date_of_birth
+            profile.save()
+        
+        messages.success(request, 'Vos informations ont été mises à jour avec succès.', extra_tags='profile success')
+        return redirect('games:settings')
+    
+    return redirect('games:settings')
+
+
+@login_required
+def change_password(request):
+    """Change le mot de passe de l'utilisateur"""
+    if request.method == 'POST':
+        old_password = request.POST.get('old_password')
+        new_password1 = request.POST.get('new_password1')
+        new_password2 = request.POST.get('new_password2')
+        
+        # Vérifier l'ancien mot de passe
+        if not request.user.check_password(old_password):
+            messages.error(request, 'Le mot de passe actuel est incorrect.', extra_tags='password danger')
+            return redirect('games:settings')
+        
+        # Vérifier que les nouveaux mots de passe correspondent
+        if new_password1 != new_password2:
+            messages.error(request, 'Les nouveaux mots de passe ne correspondent pas.', extra_tags='password danger')
+            return redirect('games:settings')
+        
+        # Vérifier la longueur du mot de passe
+        if len(new_password1) < 8:
+            messages.error(request, 'Le nouveau mot de passe doit contenir au moins 8 caractères.', extra_tags='password danger')
+            return redirect('games:settings')
+        
+        # Changer le mot de passe
+        request.user.set_password(new_password1)
+        request.user.save()
+        
+        # Maintenir la session active après changement de mot de passe
+        update_session_auth_hash(request, request.user)
+        
+        messages.success(request, 'Votre mot de passe a été modifié avec succès.', extra_tags='password success')
+        return redirect('games:settings')
+    
+    return redirect('games:settings')
+
+
+@login_required
+def update_preferences(request):
+    """Met à jour les préférences de l'utilisateur"""
+    if request.method == 'POST':
+        default_visibility = request.POST.get('default_visibility')
+        email_notifications = request.POST.get('email_notifications') == 'on'
+        
+        # Mettre à jour les préférences (nécessite un modèle Profile)
+        profile, created = Profile.objects.get_or_create(user=request.user)
+        profile.default_visibility = default_visibility
+        profile.email_notifications = email_notifications
+        profile.save()
+        
+        messages.success(request, 'Vos préférences ont été enregistrées.', extra_tags='preferences success')
+        return redirect('games:settings')
+    
+    return redirect('games:settings')
+
+
+@login_required
+def delete_account(request):
+    """Supprime le compte de l'utilisateur"""
+    if request.method == 'POST':
+        user = request.user
+        # Supprimer l'utilisateur (cascade supprimera aussi ses jeux, favoris, etc.)
+        user.delete()
+        messages.success(request, 'Votre compte a été supprimé avec succès.')
+        return redirect('games:home')
+    
+    return redirect('games:settings')
+
 
 @login_required
 def create_random_game(request):
@@ -210,7 +320,7 @@ def create_random_game(request):
     limit, created = GenerationLimit.objects.get_or_create(user=request.user)
     
     if not limit.can_generate():
-        messages.error(request, f'Vous avez atteint la limite de {limit.daily_count} générations par jour. Réessayez demain!')  # ✅ Changé max_daily en daily_count
+        messages.error(request, f'Vous avez atteint la limite de {limit.daily_count} générations par jour. Réessayez demain!')  #  Changé max_daily en daily_count
         return redirect('games:dashboard')
     
     ai_service = AIService()
@@ -241,6 +351,28 @@ def create_random_game(request):
             type_monde=universe_data['type_monde']
         )
         
+        # Générer l'image de couverture
+        image_result = ai_service.generate_and_save_image(
+            titre,
+            params['genre'],
+            params['ambiance'],
+            universe_data['description']
+        )
+        
+        # Créer le ConceptArt
+        concept_art = ConceptArt.objects.create(
+            game=game,
+            description=image_result['description'],
+            type_art="cover"
+        )
+        
+        # Sauvegarder l'image si elle a été générée
+        if image_result.get('image_data'):
+            concept_art.image.save(f"{game.id}_cover.png", image_result['image_data'], save=True)
+            print(f"✅ Image générée pour le jeu aléatoire '{titre}'")
+        else:
+            print(f"⚠️ Image non disponible pour '{titre}', description sauvegardée")
+        
         scenario_data = ai_service.generate_scenario(titre, universe_data['description'], params['genre'])
         Scenario.objects.create(
             game=game,
@@ -250,7 +382,7 @@ def create_random_game(request):
             twist=scenario_data['twist']
         )
         
-        characters_data = ai_service.generate_characters(titre, params['genre'], 3)
+        characters_data = ai_service.generate_characters(titre, params['genre'], 3, params['ambiance'], params['keywords'], universe_data['description'])
         for char_data in characters_data:
             Character.objects.create(
                 game=game,
@@ -260,7 +392,7 @@ def create_random_game(request):
                 background=char_data['background']
             )
         
-        locations_data = ai_service.generate_locations(titre, universe_data['description'], 4)
+        locations_data = ai_service.generate_locations(titre, universe_data['description'], 4, params['genre'], params['ambiance'], params['keywords'])
         for loc_data in locations_data:
             Location.objects.create(
                 game=game,
@@ -270,7 +402,12 @@ def create_random_game(request):
         
         limit.increment()
         
-        messages.success(request, f'Jeu aléatoire "{titre}" créé!')
+        # Message différent selon si l'image a été générée
+        if image_result.get('image_data'):
+            messages.success(request, f'🎮 Jeu aléatoire "{titre}" créé avec image générée!')
+        else:
+            messages.success(request, f'🎮 Jeu aléatoire "{titre}" créé (description d\'image sauvegardée)!')
+        
         return redirect('games:game_detail', game_id=game.id)
         
     except Exception as e:
