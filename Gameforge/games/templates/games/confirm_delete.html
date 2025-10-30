@@ -4,14 +4,14 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
+    <div class="col-md-6 col-lg-5">
         <div class="card">
-            <div class="card-body p-5 text-center">
-                <h2 class="card-title text-danger mb-4">⚠️ Confirmation de suppression</h2>
-                <p class="mb-4">
+            <div class="card-body text-center">
+                <h2 class="card-title text-danger mb-3">Confirmation de suppression</h2>
+                <p class="mb-3">
                     Êtes-vous sûr de vouloir supprimer le jeu <strong>"{{ game.titre }}"</strong> ?
                 </p>
-                <p class="text-muted mb-4">
+                <p class="text-muted mb-3">
                     Cette action est irréversible. Toutes les données associées (univers, scénario, personnages, lieux) seront perdues définitivement.
                 </p>
                 <form method="post" class="d-inline">
