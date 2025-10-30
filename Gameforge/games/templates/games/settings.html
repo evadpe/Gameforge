@@ -1,0 +1,211 @@
+{% extends 'games/base.html' %}
+
+{% block title %}Paramètres - GameForge{% endblock %}
+
+{% block content %}
+<div class="row mb-2">
+    <div class="col-12">
+        <h2 style="font-size: 1.5rem; margin-bottom: 8px;">Paramètres du compte</h2>
+        <p style="font-size: 0.9rem; margin-bottom: 0;">Gérez vos informations personnelles et votre sécurité</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Colonne gauche -->
+    <div class="col-lg-6">
+        <!-- Informations du profil -->
+        <div class="card" style="margin-bottom: 12px;">
+            <div class="card-body">
+                <h3 style="font-size: 1.1rem; margin-bottom: 10px;">Informations du profil</h3>
+                <form method="post" action="{% url 'games:update_profile' %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Nom d'utilisateur</label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               value="{{ user.username }}" readonly disabled
+                               style="background: rgba(15, 23, 42, 0.4) !important; cursor: not-allowed;">
+                        <small class="form-text">Le nom d'utilisateur ne peut pas être modifié</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Adresse e-mail</label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               value="{{ user.email }}" placeholder="votre@email.com" required>
+                        <small class="form-text">Utilisé pour la récupération du compte</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="date_of_birth" class="form-label">Date de naissance</label>
+                        <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" 
+                               value="{{ user.profile.date_of_birth|date:'Y-m-d' }}">
+                        <small class="form-text">Cette information reste privée</small>
+                    </div>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            {% if 'profile' in message.tags %}
+                                <div class="alert alert-{{ message.tags|cut:'profile '|cut:' ' }}" style="padding: 8px 12px; margin-bottom: 10px;">
+                                    {{ message }}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-primary w-100">Enregistrer les modifications</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Statistiques du compte -->
+        <div class="card" style="margin-bottom: 12px;">
+            <div class="card-body">
+                <h3 style="font-size: 1.1rem; margin-bottom: 10px;">Statistiques</h3>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center" style="padding: 10px; background: rgba(0, 240, 255, 0.05); border-radius: 8px;">
+                            <h4 style="font-size: 1.8rem; margin-bottom: 3px; color: var(--primary-cyan) !important;">{{ user.game_set.count }}</h4>
+                            <p style="font-size: 0.85rem; margin-bottom: 0;">Jeux créés</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center" style="padding: 10px; background: rgba(181, 55, 242, 0.05); border-radius: 8px;">
+                            <h4 style="font-size: 1.8rem; margin-bottom: 3px; color: var(--primary-purple) !important;">{{ user.favorites.count }}</h4>
+                            <p style="font-size: 0.85rem; margin-bottom: 0;">Favoris</p>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 10px; padding: 10px; background: rgba(0, 240, 255, 0.05); border-radius: 8px;">
+                    <p style="font-size: 0.85rem; margin-bottom: 3px;"><strong>Membre depuis:</strong> {{ user.date_joined|date:"d/m/Y" }}</p>
+                    <p style="font-size: 0.85rem; margin-bottom: 0;"><strong>Dernière connexion:</strong> {{ user.last_login|date:"d/m/Y à H:i" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Colonne droite -->
+    <div class="col-lg-6">
+        <!-- Sécurité - Changer le mot de passe -->
+        <div class="card" style="margin-bottom: 12px;">
+            <div class="card-body">
+                <h3 style="font-size: 1.1rem; margin-bottom: 10px;">Sécurité</h3>
+                <form method="post" action="{% url 'games:change_password' %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="old_password" class="form-label">Mot de passe actuel</label>
+                        <input type="password" class="form-control" id="old_password" name="old_password" 
+                               placeholder="Entrez votre mot de passe actuel" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="new_password1" class="form-label">Nouveau mot de passe</label>
+                        <input type="password" class="form-control" id="new_password1" name="new_password1" 
+                               placeholder="Minimum 8 caractères" required>
+                        <small class="form-text">Utilisez au moins 8 caractères avec lettres et chiffres</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="new_password2" class="form-label">Confirmer le nouveau mot de passe</label>
+                        <input type="password" class="form-control" id="new_password2" name="new_password2" 
+                               placeholder="Retapez le nouveau mot de passe" required>
+                    </div>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            {% if 'password' in message.tags %}
+                                <div class="alert alert-{{ message.tags|cut:'password '|cut:' ' }}" style="padding: 8px 12px; margin-bottom: 10px;">
+                                    {{ message }}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-danger w-100">Changer le mot de passe</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Préférences -->
+        <div class="card" style="margin-bottom: 12px;">
+            <div class="card-body">
+                <h3 style="font-size: 1.1rem; margin-bottom: 10px;">Préférences</h3>
+                <form method="post" action="{% url 'games:update_preferences' %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Visibilité par défaut des jeux</label>
+                        <select class="form-select" name="default_visibility">
+                            <option value="public" {% if user.profile.default_visibility == 'public' %}selected{% endif %}>Public</option>
+                            <option value="private" {% if user.profile.default_visibility == 'private' %}selected{% endif %}>Privé</option>
+                        </select>
+                        <small class="form-text">Définit la visibilité par défaut lors de la création d'un jeu</small>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input class="form-check-input" type="checkbox" id="email_notifications" 
+                               name="email_notifications" {% if user.profile.email_notifications %}checked{% endif %}>
+                        <label class="form-check-label" for="email_notifications">
+                            Recevoir les notifications par e-mail
+                        </label>
+                    </div>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            {% if 'preferences' in message.tags %}
+                                <div class="alert alert-{{ message.tags|cut:'preferences '|cut:' ' }}" style="padding: 8px 12px; margin-bottom: 10px;">
+                                    {{ message }}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-primary w-100">Enregistrer les préférences</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Zone de danger -->
+        <div class="card" style="border-color: var(--primary-pink); margin-bottom: 12px;">
+            <div class="card-body">
+                <h3 style="font-size: 1.1rem; margin-bottom: 8px; color: var(--primary-pink) !important;">Zone de danger</h3>
+                <p style="font-size: 0.9rem; margin-bottom: 10px;">Ces actions sont irréversibles</p>
+                
+                <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                    Supprimer mon compte
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background: var(--card-bg); border: 2px solid var(--primary-pink);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--card-border);">
+                <h5 class="modal-title" id="deleteAccountModalLabel" style="color: var(--primary-pink) !important;">Supprimer le compte</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 10px;">Êtes-vous sûr de vouloir supprimer votre compte ?</p>
+                <p style="margin-bottom: 10px;"><strong>Cette action est irréversible et entraînera :</strong></p>
+                <ul style="margin-bottom: 10px; padding-left: 20px;">
+                    <li>La suppression de tous vos jeux créés</li>
+                    <li>La perte de tous vos favoris</li>
+                    <li>La suppression de toutes vos données personnelles</li>
+                </ul>
+                <p style="margin-bottom: 0; color: var(--primary-pink) !important;">Cette action ne peut pas être annulée.</p>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--card-border);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form method="post" action="{% url 'games:delete_account' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Oui, supprimer mon compte</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
