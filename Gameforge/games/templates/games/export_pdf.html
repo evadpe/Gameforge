@@ -1,0 +1,131 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Export – {{ game.titre }}</title>
+  <style>
+    @page { size: A4; margin: 16mm; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; font-size: 11.5pt; line-height: 1.45; }
+    h1, h2, h3 { margin: 0 0 8px; }
+    h1 { font-size: 20pt; }
+    .meta { color:#555; margin-bottom: 12px; }
+    .badge { display:inline-block; border:1px solid #999; padding:2px 6px; border-radius:4px; margin-right:6px; font-size:10pt; }
+    .section { margin: 14px 0; page-break-inside: avoid; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .card { border:1px solid #ddd; padding:10px; border-radius:6px; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { border:1px solid #ddd; padding:6px; vertical-align: top; }
+    th { background:#f8f8f8; }
+    .small { font-size: 10pt; color:#666; }
+    .muted { color:#666; }
+    .footer { margin-top: 16px; border-top:1px solid #eee; padding-top:8px; font-size:10pt; color:#666; }
+    img.cover { max-width: 100%; height:auto; border:1px solid #ddd; border-radius:6px; margin-bottom:6px; }
+  </style>
+</head>
+<body>
+  <h1>{{ game.titre }}</h1>
+  <div class="meta">
+    Créé par {{ game.createur.username }} — {{ game.date_creation|date:"d/m/Y H:i" }}
+    • {% if game.est_public %}Public{% else %}Privé{% endif %}
+    • ❤️ {{ game.likes_count }}
+  </div>
+
+  <div class="section grid2">
+    <div class="card">
+      <h2>Informations générales</h2>
+      <p><strong>Genre :</strong> {{ game.get_genre_display|default:game.genre }}</p>
+      <p><strong>Ambiance :</strong> {{ game.get_ambiance_display|default:game.ambiance }}</p>
+      {% if game.mots_cles %}<p><strong>Mots-clés :</strong> {{ game.mots_cles }}</p>{% endif %}
+      {% if game.references %}<p><strong>Références :</strong> {{ game.references }}</p>{% endif %}
+    </div>
+    <div class="card">
+      <h2>Résumé & Pitch</h2>
+      {% if game.pitch %}
+        <p>{{ game.pitch|linebreaksbr }}</p>
+      {% else %}
+        <p class="small">Aucun pitch renseigné.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if game.universe %}
+  <div class="section">
+    <h2>🌌 Univers</h2>
+    <p><strong>Style graphique :</strong> {{ game.universe.get_style_graphique_display }}</p>
+    <p><strong>Type de monde :</strong> {{ game.universe.get_type_monde_display }}</p>
+    <p>{{ game.universe.description|linebreaksbr }}</p>
+  </div>
+  {% endif %}
+
+  {% if game.scenario %}
+  <div class="section">
+    <h2>📖 Scénario</h2>
+    <p><strong>Acte I :</strong> {{ game.scenario.acte_1 }}</p>
+    <p><strong>Acte II :</strong> {{ game.scenario.acte_2 }}</p>
+    <p><strong>Acte III :</strong> {{ game.scenario.acte_3 }}</p>
+    {% if game.scenario.twist %}
+      <p><strong>🎭 Plot Twist :</strong> {{ game.scenario.twist }}</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if game.characters.all %}
+  <div class="section">
+    <h2>👥 Personnages</h2>
+    <table>
+      <thead><tr><th>Nom</th><th>Rôle</th><th>Classe</th><th>Background</th><th>Gameplay</th></tr></thead>
+      <tbody>
+        {% for character in game.characters.all %}
+        <tr>
+          <td>{{ character.nom }}</td>
+          <td>{{ character.get_role_display }}</td>
+          <td>{{ character.get_classe_display|default:"—" }}</td>
+          <td class="small">{{ character.background }}</td>
+          <td class="small">{{ character.gameplay_description }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if game.locations.all %}
+  <div class="section">
+    <h2>🗺️ Lieux emblématiques</h2>
+    <table>
+      <thead><tr><th>Nom</th><th>Description</th></tr></thead>
+      <tbody>
+        {% for location in game.locations.all %}
+        <tr>
+          <td>{{ location.nom }}</td>
+          <td class="small">{{ location.description }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if game.concept_arts.all %}
+  <div class="section">
+    <h2>🎨 Concept Arts</h2>
+    <div class="grid3">
+      {% for art in game.concept_arts.all %}
+      <div class="card">
+        {% if art.image %}<img class="cover" src="{{ art.image.url }}" alt="{{ art.type_art }}">{% endif %}
+        <p class="small"><strong>Type :</strong> {{ art.get_type_art_display }}</p>
+        <p class="small">{{ art.description }}</p>
+        <p class="muted small">Ajouté le {{ art.date_creation|date:"d/m/Y" }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="footer">
+    Export PDF généré le {{ now|date:"d/m/Y H:i" }} — Gameforge
+  </div>
+</body>
+</html>
