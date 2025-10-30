@@ -34,5 +34,10 @@ urlpatterns = [
     
     # Suppression du compte
     path('settings/delete/', views.delete_account, name='delete_account'),
+
+    # Export PDF
+    path('game/<int:game_id>/export/pdf/', views.export_game_pdf, name='export_game_pdf'),
+
 ]
+
 
