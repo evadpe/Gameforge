@@ -627,6 +627,20 @@ if response.status_code == 200:
   from django.contrib import messages
   messages.success(request, f'Jeu "{titre}" créé avec succès!')
   messages.error(request, f'Erreur lors de la génération: {str(e)}')
+
+#### Export PDF **IMPLÉMENTÉ**
+- **Objectif** : Télécharger une fiche jeu auto-maquettée (style Steam/itch.io)
+- Permet l'export d'une maquette de la fiche du jeu qui contient :
+   - Les informations générales du jeu
+   - Son univers
+   - Son scénario complet
+   - Les Personnages
+   - Lieux emblématiques
+   - Concept Arts / Cover
+** Code ** :
+Se référer au Word
+
+  
   ```
 
 ---
@@ -674,25 +688,6 @@ if response.status_code == 200:
       current_choice = models.ForeignKey(Choice)
   ```
 
-#### Export PDF stylisé **NON IMPLÉMENTÉ**
-- **Objectif** : Télécharger une fiche jeu auto-maquettée (style Steam/itch.io)
-- **Pourquoi non fait** :
-  - Complexité de la mise en page PDF avec Python
-  - Nécessite des librairies lourdes (`reportlab`, `weasyprint`, `xhtml2pdf`)
-  - Design graphique demande beaucoup de temps
-  - Gestion des images dans le PDF compliquée
-- **Ce qui aurait été nécessaire** :
-  ```python
-  from reportlab.lib.pagesizes import A4
-  from reportlab.platypus import SimpleDocTemplate, Paragraph
-  
-  def export_game_pdf(request, game_id):
-      game = Game.objects.get(id=game_id)
-      buffer = io.BytesIO()
-      doc = SimpleDocTemplate(buffer, pagesize=A4)
-      return FileResponse(buffer, filename=f'{game.titre}.pdf')
-  ```
-
 #### Page de paramètres de compte **NON IMPLÉMENTÉ**
 - **Objectif** : Permettre à l'utilisateur de modifier ses informations (email, mot de passe, préférences)
 - **Pourquoi non fait** :
@@ -723,9 +718,9 @@ if response.status_code == 200:
 | Système de favoris/likes | **Fait** | 
 | Barre de recherche | **Fait** | 
 | Pop-ups de chargement | **Fait** | 
+| Export PDF | **Fait** | 
 | GDD complet | **Partiel** | 
-| Narration dynamique | **Non fait** | 
-| Export PDF | **Non fait** | 
+| Narration dynamique | **Non fait** |  
 | Page paramètres | **Non fait** |
 
 
