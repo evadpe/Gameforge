@@ -9,6 +9,10 @@ from .forms import GameCreationForm
 from .ai_service import AIService
 from django.contrib.auth import update_session_auth_hash
 from .models import Profile
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from django.utils import timezone
+import tempfile, os
 
 def home(request):
     """Page d'accueil avec tous les jeux publics"""
@@ -458,3 +462,50 @@ def favorites(request):
     """Liste des jeux favoris"""
     favorite_games = Game.objects.filter(favorited_by__user=request.user)
     return render(request, 'games/favorites.html', {'games': favorite_games})
+
+def _render_pdf_with_weasyprint(html, base_url):
+    from weasyprint import HTML  # import paresseux
+    return HTML(string=html, base_url=base_url).write_pdf()
+
+
+def _render_pdf_with_playwright(html):
+    from playwright.sync_api import sync_playwright
+    with tempfile.TemporaryDirectory() as tmpdir:
+        html_path = os.path.join(tmpdir, "export.html")
+        with open(html_path, "w", encoding="utf-8") as f:
+            f.write(html)
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page()
+            page.goto("file://" + html_path)
+            pdf = page.pdf(format="A4", print_background=True,
+                           margin={"top":"18mm","right":"18mm","bottom":"18mm","left":"18mm"})
+            browser.close()
+            return pdf
+
+
+def _render_pdf_with_xhtml2pdf(html):
+    from xhtml2pdf import pisa
+    from io import BytesIO
+    out = BytesIO()
+    pisa.CreatePDF(src=html, dest=out, encoding="utf-8")
+    return out.getvalue()
+
+
+@login_required
+def export_game_pdf(request, game_id:int):
+    game = get_object_or_404(Game, pk=game_id)
+    html = render_to_string("games/export_pdf.html", {"game": game, "now": timezone.now()})
+
+    # Ordre: WeasyPrint (si dispo), sinon Playwright (Windows-friendly), sinon xhtml2pdf
+    try:
+        pdf_bytes = _render_pdf_with_weasyprint(html, request.build_absolute_uri("/"))
+    except Exception:
+        try:
+            pdf_bytes = _render_pdf_with_playwright(html)
+        except Exception:
+            pdf_bytes = _render_pdf_with_xhtml2pdf(html)
+
+    resp = HttpResponse(pdf_bytes, content_type="application/pdf")
+    resp["Content-Disposition"] = f'attachment; filename="jeu_{game_id}_{timezone.now().strftime("%Y%m%d_%H%M")}.pdf"'
+    return resp
