@@ -545,6 +545,8 @@ if response.status_code == 200:
 
 ### Page de détail d'un jeu
 
+### Barre de chargement
+<img src="/screenshot/barre_chargement.png" alt="Barre de progression de la génération d'un jeu par l'IA" width="600px">
 
 ---
 
