@@ -1,18 +1,18 @@
-# 🎮 Gameforge
- 
+# Gameforge
+
 > **Générateur de concepts de jeux vidéo alimenté par l'IA**
- 
+
 Gameforge est une plateforme web innovante qui utilise l'intelligence artificielle (Mistral AI pour le texte, FLUX.1-schnell pour les images) pour générer automatiquement des concepts complets de jeux vidéo, incluant l'univers, le scénario, les personnages, les lieux et même des concept arts.
- 
+
 ![Django](https://img.shields.io/badge/Django-5.2.7-092E20?logo=django)
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python)
 ![Mistral AI](https://img.shields.io/badge/Mistral_AI-Powered-FF6B35)
 ![Hugging Face](https://img.shields.io/badge/🤗_Hugging_Face-FLUX.1--schnell-FFD21E)
- 
+
 ---
- 
+
 ## Table des matières
- 
+
 - [Présentation du projet](#-présentation-du-projet)
 - [Fonctionnalités](#-fonctionnalités)
 - [Architecture & Flux de données](#️-architecture--flux-de-données)
@@ -24,25 +24,25 @@ Gameforge est une plateforme web innovante qui utilise l'intelligence artificiel
 - [Tests & Expérimentations](#-tests--expérimentations)
 - [Limites & Améliorations futures](#-limites--améliorations-futures)
 - [Équipe](#-équipe)
- 
+
 ---
- 
+
 ## Présentation du projet
- 
+
 ### Contexte
- 
+
 Gameforge est né d'une volonté de démocratiser la création de concepts de jeux vidéo en utilisant l'intelligence artificielle. L'objectif est de permettre à n'importe qui (game designers, développeurs indépendants, passionnés) de générer rapidement des idées de jeux complètes et cohérentes.
- 
+
 ### Objectifs
- 
+
 - Générer automatiquement des concepts de jeux vidéo complets
 - Utiliser plusieurs modèles d'IA (Mistral AI pour le texte, tentatives avec Hugging Face)
 - Créer une interface web intuitive et responsive
 - Gérer une communauté d'utilisateurs avec système de favoris
 - Limiter les abus avec un système de quotas quotidiens
- 
+
 ### Fonctionnement général
- 
+
 1. L'utilisateur choisit des paramètres (genre, ambiance, mots-clés)
 2. Le backend appelle l'API Mistral AI via le service `ai_service.py`
 3. L'IA génère séquentiellement :
@@ -54,13 +54,13 @@ Gameforge est né d'une volonté de démocratiser la création de concepts de je
    - (Optionnel) Une image de concept art
 4. Les données sont sauvegardées dans la base de données SQLite
 5. L'utilisateur peut consulter, partager et liker les créations
- 
+
 ---
- 
+
 ## Fonctionnalités
- 
+
 ### Génération IA Complète
- 
+
 - **Titre du jeu** : Génération créative basée sur le genre et l'ambiance
 - **Univers** : Description détaillée avec style graphique (réaliste, cartoon, pixel art, anime, low poly) et type de monde (open world, linéaire, hub, arène)
 - **Scénario en 3 actes** : Structure narrative complète (introduction, développement, climax) avec twist optionnel
@@ -71,35 +71,35 @@ Gameforge est né d'une volonté de démocratiser la création de concepts de je
   - Description du gameplay
 - **Lieux emblématiques** : 4 locations uniques avec descriptions immersives
 - **Concept Arts** : Génération d'images via Mistral AI (fonctionnalité bêta)
- 
+
 ### Gestion Utilisateur
- 
+
 - Système d'authentification complet (inscription/connexion/déconnexion)
 - Tableau de bord personnel avec vue sur ses créations
 - Limite de générations quotidiennes personnalisable (5 par défaut)
 - Gestion de la visibilité (jeux publics/privés)
 - Interface d'administration Django pour les superutilisateurs
- 
+
 ### Fonctionnalités Sociales
- 
+
 - Système de favoris/likes avec compteur
 - Exploration des créations de la communauté
 - Recherche avancée par titre, genre ou mots-clés
 - Page dédiée aux favoris
 - Partage de créations publiques
- 
+
 ### Génération Aléatoire
- 
+
 - Bouton "Génération Aléatoire" pour générer un jeu avec paramètres aléatoires
 - Permet de découvrir des combinaisons inattendues
 - **Code** : Fonction `create_random_game()` dans `views.py` + `generate_random_game_params()` dans `ai_service.py`
- 
+
 ---
- 
+
 ## Architecture & Flux de données
- 
+
 ### Structure du projet
- 
+
 ```
 Gameforge/
 ├── gameforge_project/          # Configuration Django principale
@@ -138,9 +138,9 @@ Gameforge/
 ├── requirements.txt            # Dépendances Python
 └── .env                        # Variables d'environnement (non versionné)
 ```
- 
+
 ### Schéma du flux de données
- 
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        UTILISATEUR                               │
@@ -242,9 +242,9 @@ Gameforge/
 │  • Bouton like/unlike                                            │
 └─────────────────────────────────────────────────────────────────┘
 ```
- 
+
 ### Flux détaillé d'une génération
- 
+
 1. **Requête utilisateur** → POST vers `/create-game/`
 2. **Validation** → Vérification des limites quotidiennes (5/jour par défaut)
 3. **Génération séquentielle** :
@@ -252,7 +252,7 @@ Gameforge/
    titre = ai_service.generate_game_title(...)          
    universe_data = ai_service.generate_universe(...)    
    scenario_data = ai_service.generate_scenario(...)    
-   characters_data = ai_service.generate_characters(...)
+   characters_data = ai_service.generate_characters(...) 
    locations_data = ai_service.generate_locations(...)  
    image_result = ai_service.generate_and_save_image(...)
    ```
@@ -260,13 +260,13 @@ Gameforge/
 4. **Sauvegarde** → Création des objets Django et relations en base
 5. **Redirection** → Vers la page de détail du jeu créé
 6. **Incrémentation** → Compteur de générations quotidiennes +1
- 
+
 ---
- 
+
 ## Modèles de données
- 
+
 ### Diagramme de relations
- 
+
 ```
 ┌─────────────────┐
 │      User       │
@@ -331,9 +331,9 @@ Gameforge/
                               │ • date_added     │
                               └──────────────────┘
 ```
- 
+
 ### Description des modèles
- 
+
 | Modèle | Type de relation | Champs principaux | Description |
 |--------|------------------|-------------------|-------------|
 | **Game** | Hub central | `titre`, `genre`, `ambiance`, `mots_cles`, `references`, `createur` (FK User), `est_public`, `likes_count` | Modèle principal représentant un jeu généré |
@@ -344,122 +344,122 @@ Gameforge/
 | **ConceptArt** | ForeignKey vers Game | `image` (ImageField), `description`, `type_art` | Images générées par l'IA (optionnel) |
 | **Favorite** | ManyToMany User-Game | `user` (FK), `game` (FK), `date_added` | Système de likes/favoris |
 | **GenerationLimit** | OneToOne avec User | `generations_today`, `daily_count`, `last_reset` | Gestion des quotas quotidiens (5 par défaut) |
- 
+
 ### Choix de conception
- 
+
 - **OneToOne pour Universe et Scenario** : Un jeu ne peut avoir qu'un seul univers et scénario
 - **ForeignKey pour Characters et Locations** : Permet d'avoir plusieurs éléments par jeu
 - **ManyToMany pour Favorites** : Un user peut liker plusieurs jeux, un jeu peut être liké par plusieurs users
 - **ImageField pour ConceptArt** : Utilise Pillow pour le stockage et la manipulation d'images
- 
+
 ---
- 
+
 ## Installation
- 
+
 ### Prérequis
- 
+
 - **Python 3.10+** (développé avec Python 3.13)
 - **pip** (gestionnaire de paquets Python)
 - **Git** (pour cloner le dépôt)
- 
+
 ### 1. Cloner le dépôt
- 
+
 ```bash
 git clone https://github.com/evadpe/Gameforge.git
 cd Gameforge/Gameforge
 ```
- 
+
 ### 2. Créer un environnement virtuel
- 
+
 **Sur macOS/Linux :**
 ```bash
 python -m venv venv
 # ou python3 -m venv venv
 source venv/bin/activate
 ```
- 
+
 **Sur Windows :**
 ```bash
 python -m venv venv
 venv\Scripts\activate
 ```
- 
+
 ### 3. Installer les dépendances
- 
+
 ```bash
 pip install -r requirements.txt
 ```
- 
+
 **Dépendances installées :**
 - `Django==5.2.7` - Framework web
 - `mistralai>=1.0.0` - SDK Mistral AI
 - `python-dotenv==1.0.0` - Gestion des variables d'environnement
 - `Pillow>=10.0.0` - Traitement d'images
- 
+
 ### 4. Configuration des variables d'environnement
- 
+
 Créez un fichier `.env` à la racine du dossier `Gameforge/` :
- 
+
 ```env
 # API Keys
 MISTRAL_API_KEY=votre_cle_api_mistral_ici
 HUGGINGFACE_API_KEY=votre_cle_api_huggingface_ici
- 
+
 # Django Settings (optionnel)
 DEBUG=True
 SECRET_KEY=votre_secret_key_django
 ```
- 
+
 > ** Obtenir une clé Mistral AI :**
 > 1. Créez un compte sur [console.mistral.ai](https://console.mistral.ai/)
 > 2. Allez dans "API Keys"
 > 3. Créez une nouvelle clé
 > 4. Copiez-la dans votre fichier `.env`
- 
+
 > ** Obtenir une clé Hugging Face :**
 > 1. Créez un compte sur [huggingface.co](https://huggingface.co/join)
 > 2. Allez dans Settings → Access Tokens
 > 3. Créez un nouveau token (Read access suffit)
 > 4. Copiez-le dans votre fichier `.env`
->
+> 
 > **Note** : La clé Hugging Face est utilisée pour générer les concept arts avec FLUX.1-schnell
- 
+
 ### 5. Créer la base de données
- 
+
 ```bash
 # Créer les migrations
 python manage.py makemigrations
- 
+
 # Appliquer les migrations
 python manage.py migrate
 ```
- 
+
 **Migrations appliquées :**
 - `0001_initial.py` : Création des modèles initiaux
 - `0002_alter_generationlimit_max_daily.py` : Modification du champ max_daily
 - `0003_remove_generationlimit_max_daily_and_more.py` : Refactoring des limites
- 
+
 ### 6. (Optionnel) Créer un super-utilisateur
- 
+
 Pour accéder à l'interface d'administration Django :
- 
+
 ```bash
 python manage.py createsuperuser
 ```
- 
+
 Renseignez :
 - Username (ex: `admin`)
 - Email (optionnel)
 - Password (2 fois)
- 
+
 ### 7. Lancer le serveur de développement
- 
+
 ```bash
 python manage.py runserver
 ```
- 
+
 L'application sera accessible sur **`http://127.0.0.1:8000/`**
- 
+
 **URLs importantes :**
 - `/` - Page d'accueil
 - `/register/` - Inscription
@@ -467,13 +467,13 @@ L'application sera accessible sur **`http://127.0.0.1:8000/`**
 - `/dashboard/` - Tableau de bord
 - `/create-game/` - Créer un jeu
 - `/admin/` - Interface d'administration (nécessite un superuser)
- 
- 
- 
+
+
+
 ## Technologies utilisées
- 
+
 ### Backend
- 
+
 | Technologie | Version | Usage |
 |-------------|---------|-------|
 | **Python** | 3.13 | Langage principal |
@@ -482,25 +482,25 @@ L'application sera accessible sur **`http://127.0.0.1:8000/`**
 | **Mistral AI SDK** | 1.0+ | Génération de texte et images |
 | **python-dotenv** | 1.0.0 | Gestion des variables d'environnement |
 | **Pillow** | 10.0+ | Traitement d'images (ImageField) |
- 
+
 ### Frontend
- 
+
 | Technologie | Usage |
 |-------------|-------|
 | **HTML5** | Structure des pages |
 | **CSS3** | Stylisation |
 | **Django Template Language** | Moteur de templates |
 | **Bootstrap** (présumé) | Framework CSS responsive |
- 
+
 ### Intelligence Artificielle
- 
+
 #### Modèles utilisés en production
- 
+
 | Service | Modèle | Usage | Performance |
 |---------|--------|-------|-------------|
 | **Mistral AI** | `mistral-small-latest` | Génération de texte (titre, univers, scénario, personnages, lieux) | Rapide (~2-5s/appel), cohérent, français natif |
 | **Hugging Face** | `black-forest-labs/FLUX.1-schnell` | Génération d'images (concept arts) | Rapide (~5-10s), qualité correcte via API Inference |
- 
+
 **Choix du modèle d'image :**
 - **FLUX.1-schnell** (Black Forest Labs) choisi car :
   - Modèle rapide optimisé pour l'inférence ("schnell" = rapide en allemand)
@@ -508,61 +508,61 @@ L'application sera accessible sur **`http://127.0.0.1:8000/`**
   - Qualité d'image correcte pour des concept arts
   - Temps de génération acceptable (~5-10 secondes)
   - Pas besoin de télécharger le modèle localement
- 
+
 **Code utilisé :**
 ```python
 # ai_service.py
 model_url = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
 headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
- 
+
 response = requests.post(model_url, headers=headers, json={
     "inputs": prompt  
 })
- 
+
 if response.status_code == 200:
     image_bytes = response.content
     
 ```
- 
- 
+
+
 ### Outils de développement
- 
+
 - **Git** - Gestion de versions
 - **GitHub** - Hébergement du code
 - **VS Code** - Éditeurs de code
- 
+
 ---
- 
+
 ## Screenshots
- 
+
 ### Page d'accueil
- 
+
 ### Tableau de bord utilisateur
- 
- 
+
+
 ### Formulaire de création
- 
- 
+
+
 ### Page de détail d'un jeu
- 
- 
+
+
 ---
- 
+
 ## Bonus implémentés
- 
+
 ### Fonctionnalités bonus réalisées
- 
+
 #### Système de "favoris" ou "like" **IMPLÉMENTÉ**
 - Les utilisateurs peuvent liker/unliker des jeux
 - Compteur de likes en temps réel affiché sur chaque jeu
 - Page dédiée `/favorites/` pour consulter tous ses jeux favoris
 - Relation ManyToMany avec modèle `Favorite` (table de liaison)
 - Système d'unicité (un user ne peut liker qu'une fois le même jeu)
-- **Code** :
+- **Code** : 
   - Modèle `Favorite` dans `models.py`
   - Vue `toggle_favorite()` et `favorites()` dans `views.py`
-  - Affichage du bouton ❤️ dans `game_detail.html`
- 
+  - Affichage du bouton pour les favoris dans `game_detail.html`
+
 #### Barre de recherche pour filtrer les jeux **IMPLÉMENTÉ**
 - Barre de recherche sur la page d'accueil
 - Filtres multi-critères : **nom du jeu**, **genre**, **mots-clés**
@@ -574,12 +574,12 @@ if response.status_code == 200:
   query = request.GET.get('q')
   if query:
       games = games.filter(
-          Q(titre__icontains=query) |
+          Q(titre__icontains=query) | 
           Q(genre__icontains=query) |
           Q(mots_cles__icontains=query)
       )
   ```
- 
+
 #### Pop-ups de chargement pendant la génération **IMPLÉMENTÉ**
 - Messages Django affichés à chaque étape de génération
 - Feedback utilisateur en temps réel :
@@ -593,11 +593,11 @@ if response.status_code == 200:
   messages.success(request, f'Jeu "{titre}" créé avec succès!')
   messages.error(request, f'Erreur lors de la génération: {str(e)}')
   ```
- 
+
 ---
- 
+
 ### Fonctionnalités bonus partiellement implémentées
- 
+
 #### GDD complet (Game Design Document) **PARTIELLEMENT IMPLÉMENTÉ**
 - **Ce qui est généré** :
   - Titre du jeu
@@ -614,11 +614,11 @@ if response.status_code == 200:
   - Arbre de compétences
   - UI/UX mockups
   - Feuille de route de développement
- 
+
 ---
- 
+
 ### Fonctionnalités bonus non implémentées
- 
+
 #### Système de narration dynamique **NON IMPLÉMENTÉ**
 - **Objectif** : Le scénario devait pouvoir évoluer selon les choix de l'utilisateur
 - **Pourquoi non fait** :
@@ -638,7 +638,7 @@ if response.status_code == 200:
       game = models.ForeignKey(Game)
       current_choice = models.ForeignKey(Choice)
   ```
- 
+
 #### Export PDF stylisé **NON IMPLÉMENTÉ**
 - **Objectif** : Télécharger une fiche jeu auto-maquettée (style Steam/itch.io)
 - **Pourquoi non fait** :
@@ -657,7 +657,7 @@ if response.status_code == 200:
       doc = SimpleDocTemplate(buffer, pagesize=A4)
       return FileResponse(buffer, filename=f'{game.titre}.pdf')
   ```
- 
+
 #### Page de paramètres de compte **NON IMPLÉMENTÉ**
 - **Objectif** : Permettre à l'utilisateur de modifier ses informations (email, mot de passe, préférences)
 - **Pourquoi non fait** :
@@ -678,33 +678,33 @@ if response.status_code == 200:
           form = UserSettingsForm(instance=request.user)
       return render(request, 'games/settings.html', {'form': form})
   ```
- 
+
 ---
- 
+
 ### Récapitulatif des bonus
- 
+
 | Bonus | Statut |
 |-------|--------|
-| Système de favoris/likes | **Fait** |
-| Barre de recherche | **Fait** |
-| Pop-ups de chargement | **Fait** |
-| GDD complet | **Partiel** |
-| Narration dynamique | **Non fait** |
-| Export PDF | **Non fait** |
+| Système de favoris/likes | **Fait** | 
+| Barre de recherche | **Fait** | 
+| Pop-ups de chargement | **Fait** | 
+| GDD complet | **Partiel** | 
+| Narration dynamique | **Non fait** | 
+| Export PDF | **Non fait** | 
 | Page paramètres | **Non fait** |
- 
+
 **Total implémenté** : 3/7 bonus complets + 1 partiel = **~55% des bonus**
- 
+
 ---
- 
+
 ## Tests & Expérimentations
- 
+
 ### Tests de modèles d'IA
- 
+
 #### Hugging Face - Génération de texte
- 
+
 **Modèles testés :**
- 
+
 1. **GPT-2** (`gpt2`)
    - **Résultat** : Mauvaise qualité pour le français
    - **Problèmes** :
@@ -717,7 +717,7 @@ if response.status_code == 200:
      generator = pipeline('text-generation', model='gpt2')
      result = generator("Génère un titre de jeu RPG sombre:")
      ```
- 
+
 2. **Facebook OPT-1.3B** (`facebook/opt-1.3b`)
    - **Résultat** : Performances décevantes
    - **Problèmes** :
@@ -725,31 +725,31 @@ if response.status_code == 200:
      - Réponses hors contexte
      - Pas de support natif du français
    - **Conclusion** : Modèle trop limité pour notre cas d'usage
- 
+
 **Pourquoi Mistral AI a été choisi :**
 - Support natif du français
 - API simple et rapide
 - Possibilité de forcer des formats JSON
 - Qualité de génération supérieure
 - Documentation claire
- 
+
 #### Hugging Face - Génération d'images
- 
+
 **Modèles testés :**
- 
+
 1. **Stable Diffusion 2.1** (`stabilityai/stable-diffusion-2-1`)
    - **Problème majeur** : Téléchargement initial de 10-15 minutes
    - **Code testé** :
      ```python
      from diffusers import StableDiffusionPipeline
      import torch
-    
+     
      pipe = StableDiffusionPipeline.from_pretrained(
          "stabilityai/stable-diffusion-2-1",
          torch_dtype=torch.float16
      )
      pipe = pipe.to("cuda")
-    
+     
      image = pipe(
          "cyberpunk game concept art, neon lights, futuristic city",
          num_inference_steps=50
@@ -760,27 +760,27 @@ if response.status_code == 200:
      - Nécessite CUDA/GPU (problème sur machines sans GPU)
      - Consommation RAM excessive (~8-12GB)
      - Temps de génération : ~30-60 secondes par image (avec GPU)
- 
+
 2. **Stable Diffusion v1-5** (`runwayml/stable-diffusion-v1-5`)
    - Problèmes similaires à SD 2.1
    - Instabilité des résultats
- 
+
 3. **Stable Diffusion v1-4** (`CompVis/stable-diffusion-v1-4`)
    - Version obsolète
    - Résultats de qualité inférieure
- 
+
 4. **API Hugging Face Inference (premiers tests)**
    - Code testé avec Stable Diffusion :
      ```python
      import requests
-    
+     
      API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1"
      headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
-    
+     
      response = requests.post(API_URL, headers=headers, json={
          "inputs": "cyberpunk game concept art"
      })
-    
+     
      image_bytes = response.content
      ```
    - **Problèmes** :
@@ -788,7 +788,7 @@ if response.status_code == 200:
      - Latence élevée (30-60s par image)
      - File d'attente si modèle "cold"
      - Quota rapidement épuisé en développement
- 
+
 5. **FLUX.1-schnell** (`black-forest-labs/FLUX.1-schnell`) **→ SOLUTION FINALE**
    - **Succès** : Modèle rapide et de qualité via API Hugging Face
    - **Code final utilisé** :
@@ -820,64 +820,64 @@ if response.status_code == 200:
    - **Limites** :
      - Rate limit API gratuite (~100 images/jour)
      - Qualité inférieure à FLUX.1-pro (version payante)
- 
+
 **Conclusion finale :**
 - **Hugging Face local** : Trop lent et instable pour la production
 - **Stable Diffusion API** : Limites trop restrictives
 - **FLUX.1-schnell** : **Meilleur compromis** vitesse/qualité/gratuité
 - **Mistral AI Agents** : Alternative testée mais fonctionnalité bêta instable
- 
- 
+
+
 ## Limites & Améliorations futures
- 
+
 ### Fonctionnalités non implémentées
- 
+
 1. **Système de commentaires**
    - Pas de possibilité de commenter les créations
    - **Raison** : Temps insuffisant
    - **Solution future** : Modèle `Comment` avec ForeignKey vers `Game` et `User`
- 
+
 2. **Support multilingue**
    - Application uniquement en français
    - **Raison** : Django i18n non implémenté
    - **Solution future** : Utiliser `django.utils.translation` et fichiers `.po`
- 
+
 3. **Partage sur réseaux sociaux**
    - Pas de boutons "Partager sur Twitter/Facebook"
    - **Raison** : Nécessite meta tags Open Graph
    - **Solution future** : Ajouter `django-meta` et meta tags dynamiques
- 
+
 4. **Analytics & statistiques**
     - Pas de tableau de bord avec stats (jeux les plus likés, tendances, etc.)
     - **Raison** : Manque de temps
     - **Solution future** : Utiliser Django Aggregation (`Count`, `Avg`, etc.)
- 
+
 3. **Page de paramètres de compte**
     - Modifier ses informations (email, mot de passe, préférences)
     - **Raison** : Manque de temps, fonctionnalité "nice to have"
     - **Solution future** : Formulaire `UserSettingsForm` avec vue dédiée `/settings/`
- 
+
 ### Bugs connus & limitations
- 
+
 1. **Performance sur génération longue**
    - L'utilisateur peut penser que le site est bloqué (30-40s sans feedback)
    - **Amélioration** : Ajouter une barre de progression (via AJAX/WebSockets) ou tâche asynchrone (Celery)
- 
+
 2. **Pas de validation de l'API key**
    - Si la clé Mistral est invalide, l'erreur n'apparaît qu'à la première génération
    - **Amélioration** : Vérifier la clé au démarrage de l'application (dans `apps.py`)
- 
+
 3. **Limite de caractères non gérée**
    - Les champs `TextField` n'ont pas de limite, peut causer des problèmes d'affichage
    - **Amélioration** : Ajouter `max_length` ou tronquer dans les templates
- 
+
 4. **Pas de pagination**
    - Si 1000+ jeux publics, la page d'accueil sera lente
    - **Amélioration** : Utiliser `django.core.paginator.Paginator`
- 
- 
+
+
 ### Améliorations futures prioritaires
- 
+
 1. **Génération asynchrone avec Celery**
    ```python
    # tasks.py
@@ -888,34 +888,34 @@ if response.status_code == 200:
        # Génération en arrière-plan
        # Notification par email ou WebSocket quand terminé
    ```
- 
+
 2. **Cache Redis**
    - Cache des résultats d'IA pour requêtes similaires
    - Réduction des coûts API
- 
- 
+
+
 3. **API REST avec Django REST Framework**
    - Permettre aux développeurs tiers d'utiliser Gameforge
    - Endpoints : `/api/games/`, `/api/games/<id>/`, etc.
- 
- 
+
+
 4. **Mode offline/démo**
    - Utiliser des modèles locaux plus petits (GPT-2 fine-tuné)
    - Pour les utilisateurs sans clé API
- 
- 
+
+
 ## Équipe
- 
+
 ### Développeurs
- 
-- **Eva Depaepe**
-- **Mathis Ponsson**
-- **Romain Roche**
-- **Emilie Delrue**
- 
- 
+
+- **Eva Depaepe** 
+- **Mathis Ponsson** 
+- **Romain Roche** 
+- **Emilie Delrue** 
+
+
 ### Liens
- 
+
 - **GitHub** : [github.com/evadpe/Gameforge](https://github.com/evadpe/Gameforge)
- 
----# Gameforge
+
+---
