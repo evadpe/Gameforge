@@ -143,103 +143,103 @@ Gameforge/
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        UTILISATEUR                               │
+│                        UTILISATEUR                              │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                   INTERFACE WEB (Templates HTML)                 │
+│                   INTERFACE WEB (Templates HTML)                │
 │  • Formulaire de création (genre, ambiance, mots-clés)          │
-│  • Bouton "Surprise-moi !"                                       │
+│  • Bouton "Surprise-moi !"                                      │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    VIEWS.PY (Logique métier)                     │
-│  • create_game() : Validation du formulaire                      │
-│  • create_random_game() : Paramètres aléatoires                  │
-│  • Vérification des limites quotidiennes                         │
+│                    VIEWS.PY (Logique métier)                    │
+│  • create_game() : Validation du formulaire                     │
+│  • create_random_game() : Paramètres aléatoires                 │
+│  • Vérification des limites quotidiennes                        │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│               AI_SERVICE.PY (Service d'IA)                       │
+│               AI_SERVICE.PY (Service d'IA)                      │
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │ 1. generate_game_title(genre, ambiance, keywords)       │    │
 │  │    → Génère le titre du jeu                             │    │
 │  └─────────────────────────────────────────────────────────┘    │
-│                            │                                     │
-│                            ▼                                     │
+│                            │                                    │
+│                            ▼                                    │
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │ 2. generate_universe(titre, genre, ambiance)            │    │
 │  │    → Génère description, style graphique, type monde    │    │
 │  └─────────────────────────────────────────────────────────┘    │
-│                            │                                     │
-│                            ▼                                     │
+│                            │                                    │
+│                            ▼                                    │
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │ 3. generate_scenario(titre, universe, genre)            │    │
 │  │    → Génère les 3 actes + twist                         │    │
 │  └─────────────────────────────────────────────────────────┘    │
-│                            │                                     │
-│                            ▼                                     │
+│                            │                                    │
+│                            ▼                                    │
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │ 4. generate_characters(titre, genre, count=3)           │    │
 │  │    → Génère 3 personnages avec backgrounds              │    │
 │  └─────────────────────────────────────────────────────────┘    │
-│                            │                                     │
-│                            ▼                                     │
+│                            │                                    │
+│                            ▼                                    │
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │ 5. generate_locations(titre, universe, count=4)         │    │
 │  │    → Génère 4 lieux emblématiques                       │    │
 │  └─────────────────────────────────────────────────────────┘    │
-│                            │                                     │
-│                            ▼                                     │
+│                            │                                    │
+│                            ▼                                    │
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │ 6. generate_and_save_image(titre, genre, ambiance)      │    │
 │  │    → Génère une image de concept art (optionnel)        │    │
 │  └─────────────────────────────────────────────────────────┘    │
-│                            │                                     │
+│                            │                                    │
 │  Chaque appel contacte : MISTRAL AI API                         │
 │  (mistral-small-latest pour texte, mistral-medium pour images)  │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                   MODELS.PY (Base de données)                    │
+│                   MODELS.PY (Base de données)                   │
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │ Game (titre, genre, ambiance, mots_cles, createur)      │    │
-│  │   ↓                                                      │    │
+│  │   ↓                                                     │    │
 │  │ Universe (description, style_graphique, type_monde)     │    │
-│  │   ↓                                                      │    │
+│  │   ↓                                                     │    │
 │  │ Scenario (acte_1, acte_2, acte_3, twist)                │    │
-│  │   ↓                                                      │    │
+│  │   ↓                                                     │    │
 │  │ Character × 3 (nom, classe, role, background)           │    │
-│  │   ↓                                                      │    │
+│  │   ↓                                                     │    │
 │  │ Location × 4 (nom, description)                         │    │
-│  │   ↓                                                      │    │
+│  │   ↓                                                     │    │
 │  │ ConceptArt (image, description, type_art)               │    │
 │  └─────────────────────────────────────────────────────────┘    │
-│                                                                  │
+│                                                                 │
 │  + Favorite (user ↔ game) pour les likes                        │
 │  + GenerationLimit (compteur quotidien par user)                │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    SQLite Database (db.sqlite3)                  │
+│                    SQLite Database (db.sqlite3)                 │
 │  Stockage persistant de toutes les données                      │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│              AFFICHAGE FINAL (game_detail.html)                  │
-│  • Titre et métadonnées                                          │
-│  • Description de l'univers                                      │
-│  • Scénario complet                                              │
-│  • Liste des personnages                                         │
-│  • Liste des lieux                                               │
-│  • Concept art (si généré)                                       │
-│  • Bouton like/unlike                                            │
+│              AFFICHAGE FINAL (game_detail.html)                 │
+│  • Titre et métadonnées                                         │
+│  • Description de l'univers                                     │
+│  • Scénario complet                                             │
+│  • Liste des personnages                                        │
+│  • Liste des lieux                                              │
+│  • Concept art (si généré)                                      │
+│  • Bouton like/unlike                                           │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -490,7 +490,7 @@ L'application sera accessible sur **`http://127.0.0.1:8000/`**
 | **HTML5** | Structure des pages |
 | **CSS3** | Stylisation |
 | **Django Template Language** | Moteur de templates |
-| **Bootstrap** (présumé) | Framework CSS responsive |
+| **Bootstrap** | Framework CSS responsive |
 
 ### Intelligence Artificielle
 
@@ -498,8 +498,8 @@ L'application sera accessible sur **`http://127.0.0.1:8000/`**
 
 | Service | Modèle | Usage | Performance |
 |---------|--------|-------|-------------|
-| **Mistral AI** | `mistral-small-latest` | Génération de texte (titre, univers, scénario, personnages, lieux) | Rapide (~2-5s/appel), cohérent, français natif |
-| **Hugging Face** | `black-forest-labs/FLUX.1-schnell` | Génération d'images (concept arts) | Rapide (~5-10s), qualité correcte via API Inference |
+| **Mistral AI** | `mistral-small-latest` | Génération de texte (titre, univers, scénario, personnages, lieux) | Rapide, cohérent, français natif |
+| **Hugging Face** | `black-forest-labs/FLUX.1-schnell` | Génération d'images (concept arts) | Rapide, qualité correcte via API Inference |
 
 **Choix du modèle d'image :**
 - **FLUX.1-schnell** (Black Forest Labs) choisi car :
@@ -693,7 +693,6 @@ if response.status_code == 200:
 | Export PDF | **Non fait** | 
 | Page paramètres | **Non fait** |
 
-**Total implémenté** : 3/7 bonus complets + 1 partiel = **~55% des bonus**
 
 ---
 
