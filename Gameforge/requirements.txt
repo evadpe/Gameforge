@@ -5,8 +5,11 @@
 # Framework Web
 Django==5.2.7
 
-# Intelligence Artificielle
-mistralai>=1.0.0          # SDK officiel Mistral AI pour génération de texte et images
+# Intelligence Artificielle - Génération de texte
+mistralai>=1.0.0          # SDK officiel Mistral AI pour génération de texte
+
+# Intelligence Artificielle - Génération d'images
+requests>=2.31.0          # Pour appeler l'API Hugging Face (FLUX.1-schnell)
 
 # Variables d'environnement
 python-dotenv==1.0.0      # Gestion du fichier .env
@@ -32,3 +35,8 @@ Pillow>=10.0.0            # Nécessaire pour ImageField de Django
 # black                   # Formatage automatique du code
 # flake8                  # Linting Python
 # pytest-django           # Tests unitaires
+
+# Notes:
+# - FLUX.1-schnell est utilisé via l'API Hugging Face (pas de package local)
+# - mistralai SDK utilise httpx en interne (pas besoin de l'ajouter)
+# - requests est nécessaire pour l'API Hugging Face Inference
