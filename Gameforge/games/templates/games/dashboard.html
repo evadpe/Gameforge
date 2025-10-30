@@ -1,0 +1,79 @@
+{% extends 'games/base.html' %}
+
+{% block title %}Mes Jeux - GameForge{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-white">📚 Mon Tableau de Bord</h2>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card text-center p-4">
+            <h3>{{ my_games.count }}</h3>
+            <p class="text-muted mb-0">Jeux créés</p>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card text-center p-4">
+            <h3>{{ user.generation_limit.daily_count }}/{{ user.generation_limit.max_daily }}</h3>
+            <p class="text-muted mb-0">Générations aujourd'hui</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <a href="{% url 'games:create_game' %}" class="btn btn-primary me-2">➕ Créer un nouveau jeu</a>
+        <a href="{% url 'games:create_random_game' %}" class="btn btn-light">🎲 Génération aléatoire</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h3 class="text-white mb-3">Mes Jeux</h3>
+    </div>
+</div>
+
+{% if my_games %}
+    <div class="row">
+        {% for game in my_games %}
+            <div class="col-md-6 col-lg-4 game-card">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title">{{ game.titre }}</h5>
+                            {% if not game.est_public %}
+                                <span class="badge bg-secondary">Privé</span>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <span class="badge-genre me-2">{{ game.get_genre_display }}</span>
+                            <span class="badge-ambiance">{{ game.get_ambiance_display }}</span>
+                        </div>
+                        <p class="text-muted small mb-2">
+                            {{ game.date_creation|date:"d/m/Y à H:i" }}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <a href="{% url 'games:game_detail' game.id %}" class="btn btn-sm btn-primary">Voir</a>
+                            <a href="{% url 'games:delete_game' game.id %}" class="btn btn-sm btn-danger">Supprimer</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="col-12">
+        <div class="card text-center py-5">
+            <div class="card-body">
+                <h3>Vous n'avez pas encore créé de jeu</h3>
+                <p class="text-muted">Lancez-vous et créez votre premier jeu !</p>
+                <a href="{% url 'games:create_game' %}" class="btn btn-primary mt-3">Créer un jeu</a>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
