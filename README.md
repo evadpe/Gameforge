@@ -536,14 +536,47 @@ if response.status_code == 200:
 ## Screenshots
 
 ### Page d'accueil
+<img src="/screenshot/page_acceuil.png" alt="Page d'accueil" width="600px">
+
+### Page de Login
+<img src="/screenshot/page_login.png" alt="Page login" width="600px">
+
+### Page de signin
+<img src="/screenshot/page_signin.png" alt="Page signin" width="600px">
 
 ### Tableau de bord utilisateur
-
+<img src="/screenshot/page_dashboard.png" alt="Tableau de bord utilisateur" width="600px">
 
 ### Formulaire de création
-
+<img src="/screenshot/page_creation.png" alt="Formulaire de création" width="600px">
 
 ### Page de détail d'un jeu
+<img src="/screenshot/page_detail.png" alt="Page de détail d'un jeu" width="600px">
+
+#### Détail Image
+<img src="/screenshot/detail_image.png" alt="Détail Image" width="600px">
+
+#### Détail Univers
+<img src="/screenshot/detail_univers.png" alt="Détail Univers" width="600px">
+
+#### Détail Personnage
+<img src="/screenshot/detail_perso.png" alt="Détail Personnage" width="600px">
+
+#### Détail Scénario
+<img src="/screenshot/detail_scenario.png" alt="Détail Scénario" width="600px">
+
+#### Détail Lieux
+<img src="/screenshot/detail_lieu.png" alt="Détail Lieux" width="600px">
+
+
+### Page des favoris
+<img src="/screenshot/page_favori.png" alt="Page des favoris" width="600px">
+
+### Page suppression
+<img src="/screenshot/suppression_creation.png" alt="Page suppression" width="600px">
+
+### Page des paramètres Profil
+<img src="/screenshot/page_profil_setting.png" alt="Page des paramètres Profil" width="600px">
 
 ### Barre de chargement
 <img src="/screenshot/barre_chargement.png" alt="Barre de progression de la génération d'un jeu par l'IA" width="600px">
