@@ -6,6 +6,8 @@ Utilise l'API Mistral AI pour le texte et les images
 import os
 import json
 import random
+import re
+import time
 from typing import Dict, List, Optional
 from mistralai import Mistral
 from django.conf import settings
@@ -30,10 +32,14 @@ class AIService:
         self.model = "mistral-small-latest"
         self.image_agent = None
         
-        if self.mistral_key and len(self.mistral_key) > 10:  # Vérifier que la clé semble valide
+        # Configuration retry pour gérer les erreurs 429
+        self.max_retries = 3
+        self.retry_delay = 2  # secondes
+        
+        if self.mistral_key and len(self.mistral_key) > 10:
             try:
                 self.client = Mistral(api_key=self.mistral_key)
-                print(f" Client Mistral initialisé avec la clé : {self.mistral_key[:8]}...")
+                print(f"✅ Client Mistral initialisé avec la clé : {self.mistral_key[:8]}...")
                 
                 # Créer un agent pour la génération d'images
                 try:
@@ -48,62 +54,160 @@ class AIService:
                             "top_p": 0.95,
                         }
                     )
-                    print(f" Agent de génération d'images créé: {self.image_agent.id}")
+                    print(f"✅ Agent de génération d'images créé: {self.image_agent.id}")
                 except Exception as e:
                     print(f"⚠️ Impossible de créer l'agent d'images (peut-être pas activé sur votre compte): {e}")
                     self.image_agent = None
                     
             except Exception as e:
-                print(f" Erreur initialisation client Mistral: {e}")
+                print(f"❌ Erreur initialisation client Mistral: {e}")
                 self.client = None
         else:
             print("⚠️ MISTRAL_API_KEY invalide ou manquante - mode démo activé")
             print(f"   Clé trouvée: '{self.mistral_key}'")
     
+    def _clean_markdown(self, text: str) -> str:
+        """
+        Nettoie le markdown pour faciliter le parsing
+        Enlève les astérisques, etc.
+        """
+        # Enlever les astérisques markdown (gras)
+        text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
+        text = re.sub(r'\*([^*]+)\*', r'\1', text)
+        return text
+    
     def _call_api(self, prompt: str, max_tokens: int = 500) -> str:
         """
-        Appelle l'API Mistral pour la génération de texte
+        Appelle l'API Mistral pour la génération de texte avec retry automatique
         """
         if not self.client:
-            print("Mode démo - génération de contenu mock")
+            print("⚠️ Mode démo - génération de contenu mock")
             return self._generate_mock_content(prompt)
         
-        try:
-            print(f"Appel Mistral API...")
-            chat_response = self.client.chat.complete(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system", 
-                        "content": "Tu es un créateur de jeux vidéo expert. Réponds de manière concise et créative en français."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                temperature=0.8,
-                max_tokens=max_tokens,
-                top_p=0.95
-            )
-            
-            result = chat_response.choices[0].message.content
-            print(f" Réponse API reçue : {result[:100]}...")
-            return result.strip()
-            
-        except Exception as e:
-            print(f" Erreur Mistral API: {e}")
-            return self._generate_mock_content(prompt)
+        # Tentatives avec retry exponentiel
+        for attempt in range(self.max_retries):
+            try:
+                print(f"📡 Appel Mistral API (tentative {attempt + 1}/{self.max_retries})...")
+                chat_response = self.client.chat.complete(
+                    model=self.model,
+                    messages=[
+                        {
+                            "role": "system", 
+                            "content": "Tu es un créateur de jeux vidéo expert. Réponds de manière concise et créative en français."
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    temperature=0.8,
+                    max_tokens=max_tokens,
+                    top_p=0.95
+                )
+                
+                result = chat_response.choices[0].message.content
+                print(f"✅ Réponse API reçue : {result[:100]}...")
+                return result.strip()
+                
+            except Exception as e:
+                error_str = str(e)
+                
+                # Détecter erreur 429 (rate limit)
+                if "429" in error_str or "capacity exceeded" in error_str.lower():
+                    if attempt < self.max_retries - 1:
+                        wait_time = self.retry_delay * (2 ** attempt)  # Backoff exponentiel
+                        print(f"⏳ Rate limit atteint (429). Attente de {wait_time}s avant nouvelle tentative...")
+                        time.sleep(wait_time)
+                        continue
+                    else:
+                        print(f"❌ Rate limit persistant après {self.max_retries} tentatives")
+                        print("💡 Basculement vers le mode démo")
+                        return self._generate_mock_content(prompt)
+                
+                # Autres erreurs
+                print(f"❌ Erreur Mistral API: {e}")
+                if attempt < self.max_retries - 1:
+                    print(f"🔄 Nouvelle tentative dans {self.retry_delay}s...")
+                    time.sleep(self.retry_delay)
+                    continue
+                else:
+                    return self._generate_mock_content(prompt)
+        
+        return self._generate_mock_content(prompt)
 
     def _generate_mock_content(self, prompt: str) -> str:
         """
-        Génère du contenu de démo sans API
+        Génère du contenu de démo sans API - AMÉLIORÉ pour être plus varié
         """
+        import hashlib
+        
+        # Créer un seed unique basé sur le prompt
+        seed = hashlib.md5(prompt.encode()).hexdigest()
+        hash_val = int(seed, 16)
+        
         if "titre" in prompt.lower():
-            prefixes = ["Les Chroniques de", "La Légende de", "L'Aventure de", "Les Secrets de"]
-            suffixes = ["l'Ombre", "la Lumière", "l'Éternité", "Azura", "Nexus"]
-            return f"{random.choice(prefixes)} {random.choice(suffixes)}"
-        return "Contenu généré en mode démo (configurez MISTRAL_API_KEY pour utiliser l'IA)"
+            prefixes = [
+                "Les Chroniques de", "La Légende de", "L'Aventure de", "Les Secrets de",
+                "Le Royaume de", "Les Gardiens de", "L'Éveil de", "La Quête de",
+                "Les Ombres de", "Le Destin de", "Les Héros de", "L'Odyssée de"
+            ]
+            suffixes = [
+                "l'Ombre", "la Lumière", "l'Éternité", "Azura", "Nexus",
+                "Eldoria", "Véridian", "l'Aube", "Midnight", "Atheron",
+                "Zephyria", "Obsidian", "Celestia", "Avalon", "Arcadia"
+            ]
+            prefix = prefixes[hash_val % len(prefixes)]
+            suffix = suffixes[(hash_val // 13) % len(suffixes)]
+            return f"{prefix} {suffix}"
+        
+        elif "personnage" in prompt.lower() or "NOM:" in prompt:
+            # Mock de personnages avec format structuré
+            names = ["Aelric", "Zara", "Theron", "Lyssa", "Kael", "Nyx", "Orin", "Selene"]
+            roles = ["héros", "antagoniste", "allié", "mentor"]
+            classes = ["guerrier", "mage", "archer", "voleur", "paladin", "druide"]
+            
+            name = names[hash_val % len(names)]
+            role = roles[(hash_val // 7) % len(roles)]
+            classe = classes[(hash_val // 11) % len(classes)]
+            
+            return f"""NOM: {name}
+ROLE: {role}
+CLASSE: {classe}
+PERSONNALITE: Courageux, loyal, mystérieux
+BACKGROUND: Un {classe} qui cherche à accomplir sa destinée dans un monde en péril.
+APPARENCE: Allure noble avec une aura de puissance
+COMPETENCES: Maîtrise du combat et des stratégies
+GAMEPLAY: Personnage équilibré avec des capacités variées
+
+---"""
+        
+        elif "lieu" in prompt.lower() or "TYPE:" in prompt:
+            # Mock de lieux avec format structuré
+            places = ["Tour", "Cité", "Forêt", "Temple", "Montagne", "Ruines", "Grotte", "Château"]
+            adjectives = ["Sombre", "Ancienne", "Mystérieuse", "Sacrée", "Oubliée", "Éternelle"]
+            
+            place = places[hash_val % len(places)]
+            adj = adjectives[(hash_val // 7) % len(adjectives)]
+            
+            return f"""NOM: {place} {adj}
+TYPE: donjon
+DESCRIPTION: Un lieu légendaire rempli de mystères et de dangers anciens.
+IMPORTANCE: Point clé de la quête principale
+DANGERS: Créatures hostiles et pièges mortels
+TRESORS: Artefacts puissants et connaissances perdues
+
+---"""
+        
+        elif "scénario" in prompt.lower() or "acte" in prompt.lower():
+            return """Le héros découvre son destin dans un monde au bord du chaos.
+
+Les forces obscures se rassemblent et le héros doit former une alliance improbable pour les affronter.
+
+Dans une bataille épique finale, le héros révèle sa véritable nature et sauve le monde.
+
+Un ancien secret révèle que le véritable ennemi était caché depuis le début."""
+        
+        return "Contenu généré en mode démo (API Mistral indisponible - rate limit atteint)"
     
     def generate_game_title(self, genre: str, ambiance: str, keywords: List[str]) -> str:
         """
@@ -235,6 +339,8 @@ GAMEPLAY: [comment on joue ce personnage]
 Personnages:"""
 
         characters_text = self._call_api(prompt, max_tokens=800)
+        characters_text = self._clean_markdown(characters_text)
+        print(f"📝 Texte nettoyé : {characters_text[:200]}...")
         
         characters = []
         char_blocks = characters_text.split('---')
@@ -282,155 +388,45 @@ Personnages:"""
                     char.setdefault('competences', 'Combat et leadership')
                     char.setdefault('gameplay_description', 'Personnage équilibré')
                     characters.append(char)
+                    print(f"✅ Personnage parsé : {char['nom']}")
         
-        # Fallback si parsing échoue
+        # Génération aléatoire UNIQUE en cas d'échec
         if len(characters) < num_characters:
-            default_chars = [
-                {
-                    'nom': 'Aelwyn',
-                    'role': 'héros',
-                    'classe': 'mage',
-                    'personnalite': 'Curieux, intelligent, réservé',
-                    'background': 'Jeune mage découvrant ses pouvoirs dans un monde en péril.',
-                    'apparence': 'Jeune homme aux cheveux argentés et yeux perçants',
-                    'competences': 'Magie élémentaire, télékinésie, barrières mystiques',
-                    'gameplay_description': 'Mage polyvalent avec des sorts offensifs et défensifs.'
-                },
-                {
-                    'nom': 'Kaelen',
-                    'role': 'antagoniste',
-                    'classe': 'guerrier',
-                    'personnalite': 'Ambiteux, impitoyable, charismatique',
-                    'background': 'Seigneur de guerre cherchant à dominer le royaume.',
-                    'apparence': 'Guerrier en armure noire aux yeux ardents',
-                    'competences': 'Combat à deux mains, intimidation, commandement',
-                    'gameplay_description': 'Guerrier puissant avec des attaques dévastatrices.'
-                },
-                {
-                    'nom': 'Lyra',
-                    'role': 'allié',
-                    'classe': 'archer',
-                    'personnalite': 'Loyale, observatrice, sarcastique',
-                    'background': 'Chasseresse expérimentée guidant le héros à travers les terres sauvages.',
-                    'apparence': 'Jeune femme aux cheveux roux et tatouages tribaux',
-                    'competences': 'Tir précis, pistage, furtivité',
-                    'gameplay_description': 'Archer à distance avec une grande précision.'
-                }
-            ]
+            print(f"⚠️ Seulement {len(characters)}/{num_characters} personnages parsés")
+            print("🎲 Génération de personnages uniques...")
+            
+            import hashlib
+            seed = f"{game_title}_{genre}_{len(characters)}"
+            
+            roles = ['héros', 'antagoniste', 'allié', 'mentor', 'rival']
+            classes = ['guerrier', 'mage', 'archer', 'voleur', 'paladin', 'druide', 'assassin', 'clerc']
+            traits = ['courageux', 'rusé', 'loyal', 'mystérieux', 'impulsif', 'sage', 'sarcastique', 'noble']
+            name_parts = ['Ae', 'Kal', 'Thy', 'Zar', 'Lyn', 'Mor', 'Syl', 'Rae', 'Dor', 'Vel']
+            
             while len(characters) < num_characters:
-                characters.append(default_chars[len(characters) % len(default_chars)])
+                char_seed = f"{seed}_{len(characters)}"
+                hash_val = int(hashlib.md5(char_seed.encode()).hexdigest(), 16)
+                
+                role = roles[hash_val % len(roles)]
+                classe = classes[(hash_val // 10) % len(classes)]
+                trait1 = traits[(hash_val // 100) % len(traits)]
+                trait2 = traits[(hash_val // 1000) % len(traits)]
+                name = name_parts[hash_val % len(name_parts)] + name_parts[(hash_val // 7) % len(name_parts)]
+                
+                char = {
+                    'nom': name,
+                    'role': role,
+                    'classe': classe,
+                    'personnalite': f"{trait1.capitalize()}, {trait2}",
+                    'background': f"Un {classe} {trait1} dont le destin est lié à {game_title}.",
+                    'apparence': f"{classe.capitalize()} à l'allure {trait1}",
+                    'competences': f"Maîtrise du {classe} et {trait2}",
+                    'gameplay_description': f"Personnage {role} jouable en {classe}"
+                }
+                characters.append(char)
+                print(f"🎲 Personnage généré : {char['nom']}")
         
         return characters[:num_characters]
-
-    def generate_game_image(self, game_title: str, genre: str, ambiance: str, universe_description: str) -> str:
-        """
-        Génère une description textuelle pour une image conceptuelle
-        (utilisé comme fallback si la génération d'image réelle échoue)
-        """
-        prompt = f"""Crée une description détaillée pour une image conceptuelle de jeu vidéo intitulé "{game_title}".
-
-Genre: {genre}
-Ambiance: {ambiance}
-Univers: {universe_description[:200]}
-
-La description doit être visuelle et détaillée, incluant:
-- Style artistique (ex: réaliste, anime, cartoon, peinture numérique)
-- Éléments principaux (personnages, environnement, atmosphère)
-- Couleurs dominantes
-- Composition de l'image
-
-Description conceptuelle:"""
-
-        image_description = self._call_api(prompt, max_tokens=300)
-        return image_description.strip()
-
-    def generate_and_save_image(self, game_title: str, genre: str, ambiance: str, universe_description: str) -> Dict:
-        """
-        Génère une vraie image avec Mistral Agents API (FLUX)
-        Retourne un dictionnaire avec la description et les données de l'image
-        """
-        if not self.client or not self.image_agent:
-            print("⚠️ Mode démo - génération d'image désactivée")
-            description = self.generate_game_image(game_title, genre, ambiance, universe_description)
-            return {
-                'description': description,
-                'image_data': None,
-                'image_url': None
-            }
-        
-        # Créer un prompt optimisé pour FLUX
-        prompt = f"""Génère une image de cover art professionnelle pour le jeu vidéo "{game_title}".
-
-Style: Cover art AAA, qualité cinématographique
-Genre: {genre}
-Ambiance: {ambiance}
-Univers: {universe_description[:250]}
-
-L'image doit être épique, immersive et capturer visuellement l'essence du jeu. Style professionnel de jaquette de jeu vidéo."""
-        
-        try:
-            print(f"Génération d'image pour '{game_title}'...")
-            
-            # Démarrer une conversation avec l'agent d'images
-            response = self.client.beta.conversations.start(
-                agent_id=self.image_agent.id,
-                inputs=prompt
-            )
-            
-            # Extraire le file_id de l'image générée
-            file_id = None
-            
-            # Importer ToolFileChunk pour la vérification de type
-            from mistralai.models import ToolFileChunk
-            
-            # Parcourir les outputs de la réponse
-            if hasattr(response, 'outputs') and response.outputs:
-                for output in response.outputs:
-                    if hasattr(output, 'content'):
-                        for chunk in output.content:
-                            # Chercher le chunk de type ToolFileChunk
-                            if isinstance(chunk, ToolFileChunk):
-                                file_id = chunk.file_id
-                                print(f" Image générée avec file_id: {file_id}")
-                                break
-                        if file_id:
-                            break
-            
-            if file_id:
-                # Télécharger l'image depuis Mistral
-                print(f"⬇️ Téléchargement de l'image...")
-                file_bytes = self.client.files.download(file_id=file_id).read()
-                
-                print(f" Image téléchargée ({len(file_bytes)} bytes)")
-                
-                return {
-                    'description': prompt,
-                    'image_data': ContentFile(file_bytes),
-                    'image_url': None  # Mistral ne fournit pas d'URL publique
-                }
-            else:
-                print(" Aucune image générée dans la réponse")
-                print(f"   Structure de la réponse: {type(response)}")
-                if hasattr(response, 'outputs'):
-                    print(f"   Nombre d'outputs: {len(response.outputs)}")
-                description = self.generate_game_image(game_title, genre, ambiance, universe_description)
-                return {
-                    'description': description,
-                    'image_data': None,
-                    'image_url': None
-                }
-                
-        except Exception as e:
-            print(f" Erreur lors de la génération d'image: {e}")
-            import traceback
-            traceback.print_exc()
-            # Fallback sur la description textuelle
-            description = self.generate_game_image(game_title, genre, ambiance, universe_description)
-            return {
-                'description': description,
-                'image_data': None,
-                'image_url': None
-            }
 
     def generate_locations(self, game_title: str, universe: str, num_locations: int = 4) -> List[Dict[str, str]]:
         """
@@ -453,6 +449,8 @@ TRESORS: [récompenses ou secrets à découvrir]
 Lieux:"""
 
         locations_text = self._call_api(prompt, max_tokens=700)
+        locations_text = self._clean_markdown(locations_text)
+        print(f"📝 Texte nettoyé : {locations_text[:200]}...")
         
         locations = []
         loc_blocks = locations_text.split('---')
@@ -484,7 +482,6 @@ Lieux:"""
                         loc['tresors'] = line.split(':', 1)[1].strip()
                         current_field = None
                     elif current_field and line and not any(x in line for x in ['NOM:', 'TYPE:', 'DESCRIPTION:', 'IMPORTANCE:', 'DANGERS:', 'TRESORS:']):
-                        # Continuer le champ en cours
                         loc[current_field] += ' ' + line
                 
                 if 'nom' in loc and 'description' in loc:
@@ -493,47 +490,133 @@ Lieux:"""
                     loc.setdefault('dangers', 'Créatures hostiles et pièges anciens')
                     loc.setdefault('tresors', 'Artéfacts puissants et connaissances perdues')
                     locations.append(loc)
+                    print(f"✅ Lieu parsé : {loc['nom']}")
         
-        # Fallback
+        # Génération aléatoire UNIQUE en cas d'échec
         if len(locations) < num_locations:
-            default_locs = [
-                {
-                    'nom': 'Cité Céleste d\'Aetheria',
-                    'type': 'ville flottante',
-                    'description': 'Ancienne cité suspendue dans les cieux, bâtie sur des fragments de cristal volants.',
-                    'importance': 'Capitale du royaume et lieu de départ de la quête',
-                    'dangers': 'Chutes mortelles et gardiens célestes',
-                    'tresors': 'Cristaux de pouvoir et archives anciennes'
-                },
-                {
-                    'nom': 'Forêt des Murmures',
-                    'type': 'forêt enchantée',
-                    'description': 'Forêt ancienne où les arbres parlent et la magie coule comme une rivière.',
-                    'importance': 'Cache le sanctuaire des druides et des secrets anciens',
-                    'dangers': 'Illusions trompeuses et créatures ensorcelées',
-                    'tresors': 'Herbes rares et artefacts druidiques'
-                },
-                {
-                    'nom': 'Abysses Oubliées',
-                    'type': 'dongeon sous-marin',
-                    'description': 'Cité engloutie au fond de l\'océan, habitée par des créatures des profondeurs.',
-                    'importance': 'Contient le trident du roi des mers',
-                    'dangers': 'Pression écrasante et prédateurs abyssaux',
-                    'tresors': 'Perles légendaires et technologie ancienne'
-                },
-                {
-                    'nom': 'Pic du Destin',
-                    'type': 'montagne sacrée',
-                    'description': 'Plus haute montagne du monde, où seuls les plus courageux osent s\'aventurer.',
-                    'importance': 'Lieu du combat final contre le seigneur des ténèbres',
-                    'dangers': 'Vents glacials et sentiers périlleux',
-                    'tresors': 'Arme légendaire et vision du futur'
-                }
-            ]
+            print(f"⚠️ Seulement {len(locations)}/{num_locations} lieux parsés")
+            print("🎲 Génération de lieux uniques...")
+            
+            import hashlib
+            seed = f"{game_title}_{universe}_{len(locations)}"
+            
+            types = ['donjon', 'ville', 'forêt', 'montagne', 'temple', 'ruines', 'grotte', 'château']
+            prefixes = ['Tour de', 'Cité de', 'Forêt des', 'Mont', 'Temple de', 'Ruines de', 'Grotte du', 'Château de']
+            suffixes = ['Lumière', 'Ténèbres', 'Mystères', 'Sagesse', 'Perdition', 'Éternité', 'Silence', 'Tempête']
+            
             while len(locations) < num_locations:
-                locations.append(default_locs[len(locations) % len(default_locs)])
+                loc_seed = f"{seed}_{len(locations)}"
+                hash_val = int(hashlib.md5(loc_seed.encode()).hexdigest(), 16)
+                
+                type_loc = types[hash_val % len(types)]
+                prefix = prefixes[hash_val % len(prefixes)]
+                suffix = suffixes[(hash_val // 7) % len(suffixes)]
+                
+                loc = {
+                    'nom': f"{prefix} {suffix}",
+                    'type': type_loc,
+                    'description': f"Un {type_loc} légendaire où {suffix.lower()} règne en maître.",
+                    'importance': f"Lieu crucial lié à l'histoire de {game_title}",
+                    'dangers': f"Gardiens anciens et énigmes de {suffix.lower()}",
+                    'tresors': f"Artéfacts de {suffix.lower()} et connaissances oubliées"
+                }
+                locations.append(loc)
+                print(f"🎲 Lieu généré : {loc['nom']}")
         
         return locations[:num_locations]
+
+    def generate_game_image(self, game_title: str, genre: str, ambiance: str, universe_description: str) -> str:
+        """
+        Génère une description textuelle pour une image conceptuelle
+        """
+        prompt = f"""Crée une description détaillée pour une image conceptuelle de jeu vidéo intitulé "{game_title}".
+
+Genre: {genre}
+Ambiance: {ambiance}
+Univers: {universe_description[:200]}
+
+La description doit être visuelle et détaillée, incluant:
+- Style artistique
+- Éléments principaux
+- Couleurs dominantes
+- Composition de l'image
+
+Description conceptuelle:"""
+
+        image_description = self._call_api(prompt, max_tokens=300)
+        return image_description.strip()
+
+    def generate_and_save_image(self, game_title: str, genre: str, ambiance: str, universe_description: str) -> Dict:
+        """
+        Génère une vraie image avec Mistral Agents API (FLUX)
+        """
+        if not self.client or not self.image_agent:
+            print("⚠️ Mode démo - génération d'image désactivée")
+            description = self.generate_game_image(game_title, genre, ambiance, universe_description)
+            return {
+                'description': description,
+                'image_data': None,
+                'image_url': None
+            }
+        
+        prompt = f"""Génère une image de cover art professionnelle pour le jeu vidéo "{game_title}".
+
+Style: Cover art AAA, qualité cinématographique
+Genre: {genre}
+Ambiance: {ambiance}
+Univers: {universe_description[:250]}
+
+L'image doit être épique, immersive et capturer visuellement l'essence du jeu."""
+        
+        try:
+            print(f"🎨 Génération d'image pour '{game_title}'...")
+            
+            response = self.client.beta.conversations.start(
+                agent_id=self.image_agent.id,
+                inputs=prompt
+            )
+            
+            file_id = None
+            from mistralai.models import ToolFileChunk
+            
+            if hasattr(response, 'outputs') and response.outputs:
+                for output in response.outputs:
+                    if hasattr(output, 'content'):
+                        for chunk in output.content:
+                            if isinstance(chunk, ToolFileChunk):
+                                file_id = chunk.file_id
+                                print(f"✅ Image générée avec file_id: {file_id}")
+                                break
+                        if file_id:
+                            break
+            
+            if file_id:
+                print(f"⬇️ Téléchargement de l'image...")
+                file_bytes = self.client.files.download(file_id=file_id).read()
+                print(f"✅ Image téléchargée ({len(file_bytes)} bytes)")
+                
+                return {
+                    'description': prompt,
+                    'image_data': ContentFile(file_bytes),
+                    'image_url': None
+                }
+            else:
+                print("⚠️ Aucune image générée dans la réponse")
+                description = self.generate_game_image(game_title, genre, ambiance, universe_description)
+                return {
+                    'description': description,
+                    'image_data': None,
+                    'image_url': None
+                }
+                
+        except Exception as e:
+            print(f" Erreur lors de la génération d'image: {e}")
+            description = self.generate_game_image(game_title, genre, ambiance, universe_description)
+            return {
+                'description': description,
+                'image_data': None,
+                'image_url': None
+            }
 
     def generate_random_game_params(self) -> Dict[str, str]:
         """
