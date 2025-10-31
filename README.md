@@ -638,7 +638,6 @@ if response.status_code == 200:
    - Lieux emblématiques
    - Concept Arts / Cover  
 - **Code** :
-- Se référer au Word
 - Plusieurs fonctions pour l'outil d'export suivant les navigateurs.
 
 ---
